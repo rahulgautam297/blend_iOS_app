@@ -4,42 +4,77 @@
  * @flow
  */
  import React, { Component } from 'react';
- import { AppRegistry, Navigator } from 'react-native';
+ import { AppRegistry,
+    Navigator,
+    ActivityIndicator,
+    AsyncStorage } from 'react-native';
 
  import Signup from './signup_screen.js';
- import Signin from './signin_screen.js'; 
+ import Signin from './signin_screen.js';
  import OtpScreen from './otp_screen.js';
  import ContactList from './contact_list.js';
- import InitialScreen from './initial_Screen.js';
+ import InitialScreen from './initial_screen.js';
 
  class Lucido extends Component {
+   constructor(props) {
+     super(props);
+     this.state = {hasToken: false, isLoaded:false, token:''};
+   }
    async checkLoggedIn() {
      try {
        const value = await AsyncStorage.getItem('token');
-       if (value !== null)
+       if (value !== null){
+         this.setState({token:value});
          return true;
+       }else {
+         return false;
+       }
      } catch (error) {
-       console.log(":/");
+       console.log(error);
      }
+   }
+   componentWillMount() {
+     this.checkLoggedIn().then((result)=> {
+       if(result===true){
+        this.setState({ hasToken: true, isLoaded: true })
+      }else if (result === false) {
+          this.setState({  isLoaded: true })
+        }
+     });
+  }
+
+   takeMeTo(){
+     var token = this.state.hasToken;
+     if(token === true){
+       return(
+         <Navigator
+         initialRoute = {{ id: 'contactList', mobile: "", name:"", email:""}}
+         renderScene={(route, navigator) =>
+          this.renderScene(route, navigator)
+           }
+         />
+       )
+    }else if(token === false){
+       return(
+         <Navigator
+         initialRoute = {{ id: 'initial', mobile: "", name:"", email:""}}
+         renderScene={(route, navigator) =>
+          this.renderScene(route, navigator)
+           }
+         />
+       )
+     }
+   }
+   loadingInfo(){
+     if (!this.state.isLoaded) {
+       return (<ActivityIndicator />)
+     }else{
+        return(this.takeMeTo())
+      }
    }
    render() {
      return (
-      var loggedIn = this.checkLoggedIn();
-       <Navigator
-        {if(loggedIn== true){
-          return (
-            initialRoute = {{ id: "signup", mobile:"" }}
-          )
-        }else if(loggedIn == false){
-          return (
-            initialRoute = {{ id: "initialScreen", mobile:"" }}
-          )
-        }
-       }
-         renderScene={(route, navigator) =>
-           this.renderScene(route,navigator)
-         }
-       />
+       this.loadingInfo()
      )
    }
    renderScene( route, navigator ) {
@@ -51,16 +86,16 @@
      }else if (routeId === 'otpScreen') {
        return (
          <OtpScreen
-         navigator={navigator} mobile={route.mobile}/>
+         navigator={navigator} mobile={route.mobile} email={route.email} name={route.name}/>
        );
     }else if (routeId === 'contactList') {
       return (
         <ContactList
-        navigator={navigator}/>
+        navigator={navigator} token={this.state.token}/>
       );
-    }else if (routeId === 'initialScreen') {
+    }else if (routeId === 'initial') {
       return (
-        <initialScreen
+        <InitialScreen
         navigator={navigator}/>
       );
     }else if (routeId === 'signin') {
@@ -73,17 +108,3 @@
 }
 
  AppRegistry.registerComponent('Lucido', () => Lucido);
-
- // onForward={() => {
- //   const nextIndex = route.index + 1;
- //   navigator.push({
- //     index: nextIndex,
- //   });
- // }}
- //
- // // Function to call to go back to the previous scene
- // onBack={() => {
- //   if (route.index > 0) {
- //     navigator.pop();
- //   }
- // }}

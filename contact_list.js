@@ -14,12 +14,29 @@ import Camera from 'react-native-camera';
 export default class ContactList extends Component {
   constructor(props) {
     super(props);
-    this.state = {image: '', details: '', name: '', email: '', mobile: '', showGif: false};
+    this.state = {image: '', details: '', name: '', email: '', mobile: '', showGif: false, token:''};
   }
-  takePicture() {
-    this.camera.capture()
-      .then((data) => this.setState({image: data}))
-      .catch(err => console.error(err));
+  async checkLoggedIn() {
+    try {
+      const value = await AsyncStorage.getItem('token');
+      if (value !== null){
+        return value;
+      }else {
+        return false;
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  componentWillMount() {
+    if (this.props.token==='')
+      this.checkLoggedIn().then((result)=> this.setState({token:result}));
+ }
+
+  takePictureAndUpload() {
+   this.camera.capture()
+     .then((data) => {this.setState({image: data.path}); this.sendPhoto();})
+     .catch(err => console.error(err));
   }
   async storeVariables() {
     try {
@@ -30,32 +47,33 @@ export default class ContactList extends Component {
   }
 
   sendPhoto(){
-    var that = this;
-    var token = this.getVariables();
-    console.log(token);
+    var token = this.props.token;
+    if (token==='') {
+      token=this.state.token;
+    }
+    let body = new FormData();
+    body.append('image', {uri: this.state.image, name: 'photo.jpg',type: 'image/jpg'});
+    body.append('token', token);
     return fetch('http://production.cp8pxbibac.us-west-2.elasticbeanstalk.com/api/v1/search_user', {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        image: that.state.image,
-        token: token
-      })
+      body: body
     })
     .then((response) => response.json())
       .then((responseJson) => {
         this.setState({showGif:false});
         if (responseJson.code===0){
           if (responseJson.hasOwnProperty("msg"))
-            this.setState({name: responseJson.msg});
+            this.setState({details: responseJson.msg, name:'', email:'', mobile:''});
         }else if(responseJson.code===1){
           if (responseJson.hasOwnProperty("user")){
             this.setState({details: "Details-"});
-            this.setState({name: "Name: " +responseJson.user.name});
+            this.setState({name:  "Name: " +responseJson.user.name});
             this.setState({email: "Email: " +responseJson.user.email});
-            this.setState({mobile:  "Mobile: " +responseJson.user.mobile});
+            this.setState({mobile:"Mobile: " +responseJson.user.mobile});
           }
         }
       })
@@ -77,7 +95,7 @@ export default class ContactList extends Component {
   renderGifOrButton(){
     if(this.state.showGif == false){
       return(
-        <TouchableHighlight style={styles.uploadHighlight} onPress={(showGif) => {this.setState({showGif:true}); this.takePicture(); this.sendActivationRequest();}} underlayColor="#8b0000">
+        <TouchableHighlight style={styles.uploadHighlight} onPress={(showGif) => {this.setState({showGif:true}); this.takePictureAndUpload(); }} underlayColor="#8b0000">
           <Text style={styles.uploadButton}>
             Send
           </Text>
@@ -91,35 +109,74 @@ export default class ContactList extends Component {
         )
     }
   }
+  async clearStorage(){
+    try {
+      await AsyncStorage.clear();
+    } catch (error) {
+      console.log("uh oh no!!!");
+    }
+  }
+  renderImage() {
+    return (
+      <View>
+        <Image
+          source={{ uri: this.state.image }}
+          style={styles.preview}
+        />
+        <TouchableHighlight style={styles.uploadHighlight} onPress={() => this.setState({ image: '' })} underlayColor="#8b0000">
+          <Text style={styles.capture}>Find another contact?</Text>
+        </TouchableHighlight>
+      </View>
+    );
+  }
+  renderCamera(){
+    return(
+      <View>
+        <Camera
+        ref={(cam) => {
+          this.camera = cam;
+        }}
+        style={styles.preview}
+        captureTarget = {Camera.constants.CaptureTarget.disk}
+        aspect={Camera.constants.Aspect.fill}
+        captureQuality={Camera.constants.CaptureQuality.medium}        
+        flashMode={Camera.constants.FlashMode.auto}>
+        </Camera>
+      </View>
+  )
+  }
+  renderImageOrCamera(){
 
+    if (this.state.image==='') {
+      return this.renderCamera();
+    }
+    else {
+      return this.renderImage();
+    }
+  }
   render() {
     return (
       <View style= {styles.container}>
-      <Camera
-      ref={(cam) => {
-        this.camera = cam;
-      }}
-      style={styles.preview}
-      captureTarget = {Camera.constants.CaptureTarget.temp}
-      captureQuality={Camera.constants.CaptureQuality.medium}
-      aspect={Camera.constants.Aspect.fill}>
-      </Camera>
+        {this.renderImageOrCamera()}
         {this.renderGifOrButton()}
-        <Text style={styles.instructions}>
-          <Text style = {styles.instructions}>
-            {this.state.details}
-          </Text>
-          <Text style = {styles.instructions}>
-            {this.state.name}
-          </Text>
-          <Text style = {styles.instructions}>
-            {this.state.email}
-          </Text>
-          <Text style = {styles.instructions}>
-            {this.state.mobile}
-          </Text>
+        <Text style = {styles.instructions}>
+          {this.state.details}
         </Text>
-      </View>
+        <Text style = {styles.instructions}>
+          {this.state.name}
+        </Text>
+        <Text style = {styles.instructions}>
+          {this.state.email}
+        </Text>
+        <Text style = {styles.instructions}>
+          {this.state.mobile}
+        </Text>
+      <TouchableHighlight style={styles.uploadHighlight} onPress={() => {this.clearStorage(); this.props.navigator.replace({id: 'initial'});}} underlayColor="#8b0000">
+        <Text style={styles.uploadButton}>
+          wipe memory!
+        </Text>
+      </TouchableHighlight>
+    </View>
     )
   }
 }

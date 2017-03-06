@@ -17,7 +17,7 @@ export default class Signup extends Component {
     super(props);
     this.state = { mobile: '', mobileError: '', responseMobile: '', otp:'', otpError:'', showGif: false, mobileButton: true};
   }
-  sendSignUpData(){
+  sendMobile(){
     var that = this
     return fetch('http://production.cp8pxbibac.us-west-2.elasticbeanstalk.com/api/v1/send_otp_to_mobile', {
       method: 'POST',
@@ -33,10 +33,10 @@ export default class Signup extends Component {
       .then((responseJson) => {
         if (responseJson.code===0){
           this.setState({showGif:false});
-          if (responseJson.msg.hasOwnProperty("msg"))
+          if (responseJson.hasOwnProperty("msg"))
             this.setState({mobileError: responseJson.msg});
         }else if(responseJson.code===1){
-          this.setState({showGif: false, mobileButton: false, responseMobile:this.state.mobile});
+          this.setState({showGif: false, mobileButton: false, responseMobile:this.state.mobile,mobileError: ""});
         }
       })
       .catch((error) => {
@@ -60,11 +60,10 @@ export default class Signup extends Component {
       .then((responseJson) => {
         if (responseJson.code===0){
           this.setState({showGif:false});
-          if (responseJson.msg.hasOwnProperty("msg"))
-            this.setState({mobileError: responseJson.msg});
+          if (responseJson.hasOwnProperty("msg"))
+            this.setState({otpError: responseJson.msg});
         }else if(responseJson.code===1){
-          this.storeVariables(responseJson)
-          this.props.navigator.replace({id: 'contactList'});
+          this.storeVariables(responseJson).then(()=> this.props.navigator.replace({id: 'contactList'}))
         }
       })
       .catch((error) => {
@@ -83,7 +82,7 @@ export default class Signup extends Component {
       return(
         <TouchableHighlight style={styles.uploadHighlight} onPress={(showGif) => {this.setState({showGif:true}); this.sendMobile();}} underlayColor="#8b0000">
           <Text style={styles.uploadButton}>
-            Sign in
+            Send
           </Text>
         </TouchableHighlight>
       )
@@ -113,7 +112,8 @@ export default class Signup extends Component {
     }
   }
   renderOtpForm(){
-    if(this.state.mobileButton == false){
+    if(this.state.mobileButton === false){
+      return(
       <View style={styles.underlineInput}>
         <Text style={styles.instructions}>
           Enter 1 Digit code
@@ -128,12 +128,13 @@ export default class Signup extends Component {
         keyboardType= "phone-pad"
         />
       </View>
+    )
     }
   }
   render() {
     return (
       <ScrollView>
-        <Text style={styles.instructions}>
+        <Text style={styles.mainHeading}>
           Sign in
         </Text>
         <View style={styles.underlineInput}>
@@ -151,7 +152,7 @@ export default class Signup extends Component {
           />
         </View>
         {this.renderGifOrButton()}
-        {this.renderOtp()}
+        {this.renderOtpForm()}
         {this.renderOtpButton()}
       </ScrollView>
     );
@@ -159,16 +160,17 @@ export default class Signup extends Component {
 }
 
 const styles = StyleSheet.create({
+  mainHeading: {
+    color: '#333333',
+    marginTop: 100,
+    fontSize: 20,
+    textAlign:'center'
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F5FCFF',
-  },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
   },
   instructions: {
     color: '#333333',

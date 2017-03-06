@@ -16,7 +16,6 @@ export default class OtpScreen extends Component {
     super(props);
     this.state = {otp: '', otpError: '', showGif: false};
   }
-
   sendActivationRequest(){
     var that = this
     return fetch('http://production.cp8pxbibac.us-west-2.elasticbeanstalk.com/api/v1/activate_account', {
@@ -27,7 +26,7 @@ export default class OtpScreen extends Component {
       },
       body: JSON.stringify({
         mobile: that.props.mobile,
-        otp: that.state.otp
+        otp:    that.state.otp
       })
     })
     .then((response) => response.json())
@@ -46,10 +45,9 @@ export default class OtpScreen extends Component {
         console.error(error);
     });
   }
-
   async storeVariables(token) {
     try {
-      await AsyncStorage.setItem('token', token);
+      await AsyncStorage.multiSet([['name', this.props.name], ['mobile', this.props.mobile], ['email', this.props.email], ['token', token]]);
     } catch (error) {
       console.log("uh oh no!!!");
     }

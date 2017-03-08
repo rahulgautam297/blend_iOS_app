@@ -14,7 +14,7 @@
  import OtpScreen from './otp_screen.js';
  import ContactList from './contact_list.js';
  import InitialScreen from './initial_screen.js';
-
+ import SignupCamera from './signup_camera.js';
  class Lucido extends Component {
    constructor(props) {
      super(props);
@@ -48,7 +48,7 @@
      if(token === true){
        return(
          <Navigator
-         initialRoute = {{ id: 'contactList', mobile: "", name:"", email:""}}
+         initialRoute = {{ id: 'contactList', mobile: "", name:"", email:"", image:""}}
          renderScene={(route, navigator) =>
           this.renderScene(route, navigator)
            }
@@ -57,7 +57,7 @@
     }else if(token === false){
        return(
          <Navigator
-         initialRoute = {{ id: 'initial', mobile: "", name:"", email:""}}
+         initialRoute = {{ id: 'initial', mobile: "", name:"", email:"", image:""}}
          renderScene={(route, navigator) =>
           this.renderScene(route, navigator)
            }
@@ -81,7 +81,7 @@
      var routeId = route.id;
      if (routeId === 'signup') {
        return (
-         <Signup navigator={navigator}/>
+         <Signup navigator={navigator} image={route.image}/>
        );
      }else if (routeId === 'otpScreen') {
        return (
@@ -101,6 +101,11 @@
     }else if (routeId === 'signin') {
       return (
         <Signin
+        navigator={navigator}/>
+      );
+    }else if (routeId === 'signupCamera') {
+      return (
+        <SignupCamera
         navigator={navigator}/>
       );
     }

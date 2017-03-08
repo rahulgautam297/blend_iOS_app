@@ -11,28 +11,18 @@ import {
   TouchableHighlight,
   Image,
   AsyncStorage,
-  KeyboardAvoidingView
 } from 'react-native';
 import Camera from 'react-native-camera';
 export default class Signup extends Component {
 
   constructor(props) {
     super(props);
-    this.state = {name: '', email: '', mobile: '', image:'', imageError:'', nameError: '', mobileError: '', emailError: '', showGif: false, click:false };
-  }
-  takePicture() {
-    this.camera.capture()
-      .then((data) => this.setState({image: data.path, click: true,imageError: ''}))
-      .catch(err => console.error(err));
+    this.state = {name: '', email: '', mobile: '', nameError: '', mobileError: '', emailError: '', showGif: false };
   }
 
   sendSignUpData(){
-    if (this.state.click ===false) {
-      this.setState({imageError: 'Click picture idiot!!',showGif:false});
-      return;
-    }
     let body = new FormData();
-    body.append('image', {uri: this.state.image, name: 'photo.jpg',type: 'image/jpg'});
+    body.append('image', {uri: this.props.image, name: 'photo.jpg',type: 'image/jpg'});
     body.append('name', this.state.name);
     body.append('mobile', this.state.mobile);
     body.append('email', this.state.email);
@@ -62,125 +52,67 @@ export default class Signup extends Component {
         console.error(error);
     });
   }
-  async storeVariables() {
-    try {
-      await AsyncStorage.multiSet([['name', this.state.name], ['mobile', this.state.mobile], ['email', this.state.email]]);
-    } catch (error) {
-      console.log("uh oh no!!!");
-    }
-  }
   renderGifOrButton(){
     if(this.state.showGif == false){
       return(
-        <TouchableHighlight style={styles.uploadHighlight} onPress={(showGif) => {this.setState({showGif:true}); this.sendSignUpData();}} underlayColor="#8b0000">
-          <Text style={styles.uploadButton}>
-            Sign up
-          </Text>
+        <TouchableHighlight style={styles.uploadHighlight} onPress={(showGif) => {this.setState({showGif:true}); this.sendSignUpData();}} underlayColor="#ffffff">
+          <Image source={require('./button.png')} style={styles.imageButton}/>
         </TouchableHighlight>
       )
     }else{
       return (
-        <TouchableHighlight style={styles.uploadHighlight} underlayColor="#8b0000">
+        <TouchableHighlight style={styles.uploadHighlight} underlayColor="#ffffff">
           <Image source={require('./default.gif')} />
         </TouchableHighlight>
         )
     }
   }
-  renderImage() {
-    return (
-      <View>
-        <Image
-          source={{ uri: this.state.image }}
-          style={styles.preview}
-        />
-        <TouchableHighlight style={styles.uploadHighlight} onPress={() => this.setState({ image: '' })} underlayColor="#8b0000">
-          <Text style={styles.capture}>Take another picture?</Text>
-        </TouchableHighlight>
-      </View>
-    );
-  }
-  renderCamera(){
-    return(
-      <View>
-        <Camera
-        ref={(cam) => {
-          this.camera = cam;
-        }}
-        style={styles.preview}
-        captureTarget = {Camera.constants.CaptureTarget.disk}
-        captureQuality={Camera.constants.CaptureQuality.medium}
-        type={Camera.constants.Type.front}
-        aspect={Camera.constants.Aspect.fill}
-        mirrorImage={true}>
-        </Camera>
-        <TouchableHighlight style={styles.uploadHighlight} onPress={this.takePicture.bind(this)} underlayColor="#8b0000">
-          <Text style={styles.capture}>Click picture</Text>
-        </TouchableHighlight>
-      </View>
-  )
-  }
-  renderImageOrCamera(){
-
-    if (this.state.image==='') {
-      return this.renderCamera();
-    }
-    else {
-      return this.renderImage();
-    }
-  }
   render() {
     return (
-      <ScrollView>
-      <KeyboardAvoidingView behavior='position'>
-        {this.renderImageOrCamera()}
-        <Text style = {styles.errorText}>
-          {this.state.imageError}
-        </Text>
-          <View style={styles.underlineInput}>
-          <Text style={styles.instructions}>
+      <View style={styles.container}>
+          <View style={styles.underlineInputTop}>
+          <Text style={styles.textForName}>
             Name &nbsp;
             <Text style = {styles.errorText}>
               {this.state.nameError}
             </Text>
           </Text>
               <TextInput
-              style={{height: 40}}
+              style={styles.inputForName}
               onChangeText={(name) => this.setState({name})}
               value={this.state.name}
               />
           </View>
-
           <View style={styles.underlineInput}>
-            <Text style={styles.instructions}>
-              Mobile &nbsp;
-              <Text style = {styles.errorText}>
-              {this.state.mobileError}
-              </Text>
-            </Text>
-              <TextInput
-              style={{height: 40}}
-              onChangeText={(mobile) => this.setState({mobile})}
-              value={this.state.mobile}
-              keyboardType= "phone-pad"
-              />
-          </View>
-          <View style={styles.underlineInput}>
-            <Text style={styles.instructions}>
+            <Text style={styles.textForEmail}>
               Email &nbsp;
               <Text style = {styles.errorText}>
               {this.state.emailError}
               </Text>
             </Text>
               <TextInput
-              style={{height: 40}}
+              style={styles.inputForEmail}
               onChangeText={(email) => this.setState({email})}
               value={this.state.email}
               autoCapitalize="none"
               />
           </View>
+          <View style={styles.underlineInput}>
+            <Text style={styles.textForMobile}>
+              Mobile &nbsp;
+              <Text style = {styles.errorText}>
+              {this.state.mobileError}
+              </Text>
+            </Text>
+              <TextInput
+              style={styles.inputForMobile}
+              onChangeText={(mobile) => this.setState({mobile})}
+              value={this.state.mobile}
+              keyboardType= "phone-pad"
+              />
+          </View>
         {this.renderGifOrButton()}
-        </KeyboardAvoidingView>
-      </ScrollView>
+      </View>
     );
   }
 }
@@ -188,47 +120,68 @@ export default class Signup extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5FCFF',
-  },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
-  },
-  instructions: {
-    color: '#333333',
-    marginTop: 20,
-    fontSize: 15
-  },
-  capture: {
-    alignSelf: 'center',
-    textAlign: 'center',
-    color: '#ffffff',
-  },
-  preview: {
-    width: 400,
-    height: 250
+    backgroundColor: '#F97240',
   },
   uploadHighlight: {
-    backgroundColor: "#D34836",
-    padding: 15,
-    borderRadius: 20,
-    alignSelf: 'center',
-    marginTop: 10,
+    backgroundColor: "#ffffff",
+    padding: 20,
+    borderRadius: 50,
+    marginTop: 15,
   },
   uploadButton: {
     color: "#ffffff",
     fontWeight: "600"
   },
-   underlineInput: {
-     borderBottomColor: '#ddd',
-     borderBottomWidth: 1,
-     alignSelf: 'stretch'
-  },
+  underlineInput: {
+    borderBottomColor: '#ddd',
+    borderBottomWidth: 1,
+    width: 265,
+ },
+ underlineInputTop: {
+   borderBottomColor: '#ddd',
+   borderBottomWidth: 1,
+   marginTop:Dimensions.get('window').width/4,
+   width: 265,
+ },
   errorText: {
     fontSize:13,
     color: "#d3d3d3"
-  }
+  },
+  inputForMobile:{
+    height:22,
+    color:"#ffffff",
+    fontSize:22,
+    marginTop:12,
+  },
+  textForMobile: {
+    marginTop: 15,
+    color: '#ffffff',
+    fontSize: 14
+  },
+  inputForName:{
+    height:22,
+    color:"#ffffff",
+    fontSize:22,
+    marginTop:12,
+  },
+  textForName: {
+    color: '#ffffff',
+    fontSize: 14
+  },
+  inputForEmail:{
+    height:22,
+    color:"#ffffff",
+    fontSize:22,
+    marginTop:12,
+  },
+  textForEmail: {
+    marginTop: 15,
+    color: '#ffffff',
+    fontSize: 14
+  },
+  imageButton: {
+    width:30,
+    height:30,
+  },
 });

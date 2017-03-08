@@ -80,16 +80,14 @@ export default class Signup extends Component {
   renderGifOrButton(){
     if(this.state.showGif == false && this.state.mobileButton == true){
       return(
-        <TouchableHighlight style={styles.uploadHighlight} onPress={(showGif) => {this.setState({showGif:true}); this.sendMobile();}} underlayColor="#8b0000">
-          <Text style={styles.uploadButton}>
-            Send
-          </Text>
+        <TouchableHighlight style={styles.uploadHighlight} onPress={(showGif) => {this.setState({showGif:true}); this.sendMobile();}} underlayColor="#ffffff">
+            <Image source={require('./button.png')} style={styles.imageButton}/>
         </TouchableHighlight>
       )
     }else if(this.state.showGif == true && this.state.mobileButton == true){
       return (
-        <TouchableHighlight style={styles.uploadHighlight} underlayColor="#8b0000">
-          <Image source={require('./default.gif')} />
+        <TouchableHighlight style={styles.uploadHighlight} underlayColor="#ffffff">
+          <Image source={require('./default.gif')} style={styles.imageButton} />
         </TouchableHighlight>
         )
     }
@@ -97,15 +95,16 @@ export default class Signup extends Component {
   renderOtpButton(){
     if(this.state.showGif == false && this.state.mobileButton == false){
       return(
-        <TouchableHighlight style={styles.uploadHighlight} onPress={(showGif) => {this.setState({showGif:true}); this.sendOtp();}} underlayColor="#8b0000">
-          <Text style={styles.uploadButton}>
-            Sign in
-          </Text>
+        <TouchableHighlight style={styles.uploadHighlightForOTP} onPress={(showGif) => {this.setState({showGif:true}); this.sendOtp();}} underlayColor="#ffffff">
+        <Text style={styles.forSignInText}>
+        Sign In &nbsp;
+          <Image source={require('./button.png')} style={styles.imageButton2}/>
+        </Text>
         </TouchableHighlight>
       )
     }else if(this.state.showGif == true && this.state.mobileButton == false){
       return (
-        <TouchableHighlight style={styles.uploadHighlight} underlayColor="#8b0000">
+        <TouchableHighlight style={styles.uploadHighlight} underlayColor="#ffffff">
           <Image source={require('./default.gif')} />
         </TouchableHighlight>
         )
@@ -115,14 +114,14 @@ export default class Signup extends Component {
     if(this.state.mobileButton === false){
       return(
       <View style={styles.underlineInput}>
-        <Text style={styles.instructions}>
-          Enter 1 Digit code
-        </Text>
-        <Text style = {styles.errorText}>
-          {this.state.otpError}
+        <Text style={styles.ForOTPText}>
+          Enter OTP
+          <Text style = {styles.errorText}>
+            {this.state.otpError}
+          </Text>
         </Text>
         <TextInput
-        style={{height: 40}}
+        style={styles.OTPInputStyle}
         onChangeText={(otp) => this.setState({otp})}
         value={this.state.otp}
         keyboardType= "phone-pad"
@@ -133,77 +132,95 @@ export default class Signup extends Component {
   }
   render() {
     return (
-      <ScrollView>
-        <Text style={styles.mainHeading}>
-          Sign in
-        </Text>
-        <View style={styles.underlineInput}>
-          <Text style={styles.instructions}>
+      <View style={styles.container}>
+        <View style={styles.underlineInputTop}>
+          <Text style={styles.ForMobileText}>
             Mobile &nbsp;
             <Text style = {styles.errorText}>
               {this.state.mobileError}
             </Text>
           </Text>
           <TextInput
-          style={{height: 40}}
+          style={styles.mobileInputStyle}
           onChangeText={(mobile) => this.setState({mobile})}
           value={this.state.mobile}
           keyboardType= "phone-pad"
+          onFocus={() => this.setState({mobileError:''})}
           />
         </View>
         {this.renderGifOrButton()}
         {this.renderOtpForm()}
         {this.renderOtpButton()}
-      </ScrollView>
+      </View>
     );
   }
 }
 
 const styles = StyleSheet.create({
-  mainHeading: {
-    color: '#333333',
-    marginTop: 100,
-    fontSize: 20,
-    textAlign:'center'
-  },
   container: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5FCFF',
+    backgroundColor: '#F97240',
   },
-  instructions: {
-    color: '#333333',
-    marginTop: 20,
-    fontSize: 15
+  mobileInputStyle:{
+    height:22,
+    color:"#ffffff",
+    fontSize:22,
+    marginTop:12,
   },
-  capture: {
-    alignSelf: 'center',
-    textAlign: 'center',
+  ForMobileText: {
     color: '#ffffff',
+    fontSize: 14
   },
-  preview: {
-    width: 400,
-    height: 300
+  ForOTPText: {
+    marginTop: 15,
+    color: '#ffffff',
+    fontSize: 14
+  },
+  OTPInputStyle:{
+    height:22,
+    color:"#ffffff",
+    fontSize:22,
+    marginTop:12,
   },
   uploadHighlight: {
-    backgroundColor: "#D34836",
-    padding: 15,
-    borderRadius: 20,
-    alignSelf: 'center',
-    marginTop: 10,
+    backgroundColor: "#ffffff",
+    padding: 20,
+    borderRadius: 50,
+    marginTop: 15,
   },
-  uploadButton: {
-    color: "#ffffff",
-    fontWeight: "600"
+  uploadHighlightForOTP: {
+    backgroundColor: "#ffffff",
+    padding: 16,
+    borderRadius: 50,
+    marginTop: 40,
   },
    underlineInput: {
      borderBottomColor: '#ddd',
      borderBottomWidth: 1,
-     alignSelf: 'stretch'
+     width: 265,
   },
+  underlineInputTop: {
+    borderBottomColor: '#ddd',
+    borderBottomWidth: 1,
+    width: 265,
+    marginTop:Dimensions.get('window').width/3,
+ },
   errorText: {
     fontSize:13,
     color: "#d3d3d3"
+  },
+  imageButton: {
+    width:30,
+    height:30,
+  },
+  imageButton2: {
+    width:25,
+    height:25,
+    marginTop:9,
+  },
+  forSignInText:{
+    color: '#FF4500',
+    fontSize: 25
   }
 });

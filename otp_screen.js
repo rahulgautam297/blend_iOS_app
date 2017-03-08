@@ -66,33 +66,34 @@ export default class OtpScreen extends Component {
   renderGifOrButton(){
     if(this.state.showGif == false){
       return(
-        <TouchableHighlight style={styles.uploadHighlight} onPress={(showGif) => {this.setState({showGif:true}); this.sendActivationRequest();}} underlayColor="#8b0000">
-          <Text style={styles.uploadButton}>
-            Send
-          </Text>
+        <TouchableHighlight style={styles.uploadHighlight} onPress={(showGif) => {this.setState({showGif:true}); this.sendActivationRequest();}} underlayColor="#ffffff">
+        <Text style={styles.forSignUpText}>
+        Sign Up
+          <Image source={require('./button.png')} style={styles.imageButton}/>
+        </Text>
         </TouchableHighlight>
       )
-    }else{
+    }else if(this.state.showGif == true){
       return (
-        <TouchableHighlight style={styles.uploadHighlight} underlayColor="#8b0000">
-          <Image source={require('./default.gif')} />
+        <TouchableHighlight style={styles.uploadHighlight} underlayColor="#ffffff">
+          <Image source={require('./default.gif')} style={styles.imageButton2} />
         </TouchableHighlight>
-      );
+        )
     }
   }
 
   render() {
     return (
       <View style= {styles.container}>
-        <Text style={styles.instructions}>
-          Enter your 1 digit code. Hardcoded to one.
+        <Text style={styles.forOTPText}>
+          Enter OTP.
           <Text style = {styles.errorText}>
-          {this.state.otpError}
+            {this.state.otpError}
           </Text>
         </Text>
         <View style={styles.underlineInput}>
           <TextInput
-          style={{height: 40}}
+          style={styles.otpInputStyle}
           onChangeText={(otp) => this.setState({otp})}
           value={this.state.otp}
           />
@@ -104,32 +105,51 @@ export default class OtpScreen extends Component {
 }
 const styles = StyleSheet.create({
   container: {
-    marginTop: 100
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F97240',
   },
-  instructions: {
-    color: '#333333',
-    marginTop: 20,
-    fontSize: 15,
-    textAlign:"center"
+  otpInputStyle:{
+    height:22,
+    color:"#ffffff",
+    fontSize:22,
+    marginTop:12,
+  },
+  forOTPText: {
+    color: '#ffffff',
+    fontSize: 14
   },
   uploadHighlight: {
-    backgroundColor: "#D34836",
-    padding: 15,
-    borderRadius: 20,
-    alignSelf: 'center',
-    marginTop: 10,
-  },
-  uploadButton: {
-    color: "#ffffff",
-    fontWeight: "600"
+    backgroundColor: "#ffffff",
+    padding: 16,
+    borderRadius: 50,
+    marginTop: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
    underlineInput: {
      borderBottomColor: '#ddd',
      borderBottomWidth: 1,
-     alignSelf: 'stretch'
+     alignSelf: 'center',
+     width: 55,
   },
   errorText: {
     fontSize:12,
     color: "#d3d3d3"
+  },
+  imageButton: {
+    width:30,
+    height:30,
+    marginTop:13,
+    marginLeft:8,
+  },
+  imageButton2: {
+    width:30,
+    height:30,
+  },
+  forSignUpText:{
+    color: '#FF4500',
+    fontSize: 25
   }
 });

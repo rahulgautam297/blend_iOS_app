@@ -15,6 +15,7 @@
  import ContactList from './contact_list.js';
  import InitialScreen from './initial_screen.js';
  import SignupCamera from './signup_camera.js';
+ import CameraSearch from './camera_search.js';
  class Lucido extends Component {
    constructor(props) {
      super(props);
@@ -48,7 +49,7 @@
      if(token === true){
        return(
          <Navigator
-         initialRoute = {{ id: 'contactList', mobile: "", name:"", email:"", image:""}}
+         initialRoute = {{ id: 'contactList', mobile: "", name:"", email:"", image:"", gotResponse:false}}
          renderScene={(route, navigator) =>
           this.renderScene(route, navigator)
            }
@@ -57,7 +58,7 @@
     }else if(token === false){
        return(
          <Navigator
-         initialRoute = {{ id: 'initial', mobile: "", name:"", email:"", image:""}}
+         initialRoute = {{ id: 'initial', mobile: "", name:"", email:"", image:"", gotResponse:false}}
          renderScene={(route, navigator) =>
           this.renderScene(route, navigator)
            }
@@ -91,7 +92,7 @@
     }else if (routeId === 'contactList') {
       return (
         <ContactList
-        navigator={navigator} token={this.state.token}/>
+        navigator={navigator} gotResponse={route.gotResponse} mobile={route.mobile} email={route.email} name={route.name}/>
       );
     }else if (routeId === 'initial') {
       return (
@@ -107,6 +108,11 @@
       return (
         <SignupCamera
         navigator={navigator}/>
+      );
+    }else if (routeId === 'cameraSearch') {
+      return (
+        <CameraSearch
+        navigator={navigator} token={this.state.token}/>
       );
     }
   }

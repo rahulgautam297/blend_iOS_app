@@ -12,7 +12,7 @@ import {
   Image,
   AsyncStorage
 } from 'react-native';
-export default class Signup extends Component {
+export default class Signin extends Component {
   constructor(props) {
     super(props);
     this.state = { mobile: '', mobileError: '', responseMobile: '', otp:'', otpError:'', showGif: false, mobileButton: true};
@@ -72,7 +72,7 @@ export default class Signup extends Component {
   }
   async storeVariables(responseJson) {
     try {
-      await AsyncStorage.multiSet([['name', responseJson.user.name], ['mobile', responseJson.user.mobile], ['email', responseJson.user.email], ['token', responseJson.token]]);
+      await AsyncStorage.multiSet([['name', responseJson.user.name], ['mobile', responseJson.user.mobile], ['email', responseJson.user.email], ['token', responseJson.token], ['allContacts', JSON.stringify([])]]);
     } catch (error) {
       console.log("uh oh no!!!");
     }
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ddd',
     borderBottomWidth: 1,
     width: 265,
-    marginTop:Dimensions.get('window').width/3,
+    marginTop:Dimensions.get('window').width/4,
  },
   errorText: {
     fontSize:13,

@@ -9,7 +9,8 @@ import {
   Button,
   TouchableHighlight,
   Image,
-  AsyncStorage } from 'react-native';
+  AsyncStorage,
+  Dimensions } from 'react-native';
 
 export default class OtpScreen extends Component {
   constructor(props) {
@@ -47,12 +48,11 @@ export default class OtpScreen extends Component {
   }
   async storeVariables(token) {
     try {
-      await AsyncStorage.multiSet([['name', this.props.name], ['mobile', this.props.mobile], ['email', this.props.email], ['token', token]]);
+      await AsyncStorage.multiSet([['name', this.props.name], ['mobile', this.props.mobile], ['email', this.props.email], ['token', token], ['allContacts', JSON.stringify([])]]);
     } catch (error) {
       console.log("uh oh no!!!");
     }
   }
-
   async getVariables() {
     try {
       const value = await AsyncStorage.getItem('token');
@@ -106,7 +106,6 @@ export default class OtpScreen extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F97240',
   },
@@ -117,6 +116,7 @@ const styles = StyleSheet.create({
     marginTop:12,
   },
   forOTPText: {
+    marginTop:Dimensions.get('window').width/4,
     color: '#ffffff',
     fontSize: 14
   },

@@ -9,16 +9,23 @@ import {
   Button,
   TouchableHighlight,
   Image,
-  AsyncStorage } from 'react-native';
+  AsyncStorage,
+  Dimensions,
+  ActivityIndicator,
+  ListView,} from 'react-native';
 import Camera from 'react-native-camera';
 export default class ContactList extends Component {
   constructor(props) {
     super(props);
-    this.state = {image: '', details: '', name: '', email: '', mobile: '', showGif: false, token:''};
+    this.state = {token:'', allContacts:'', allNewRequests:'', gotContacts:false, showContacts:true};
   }
-  async checkLoggedIn() {
+  // addContact(){
+  //   var array = JSON.parse(this.state.allContacts).concat({name:this.props.name, mobile:this.props.mobile, email:this.props.email})
+  //   this.setState({allContacts: JSON.stringify(array)});
+  // }
+  async getVariable(item) {
     try {
-      const value = await AsyncStorage.getItem('token');
+      const value = await AsyncStorage.getItem(item);
       if (value !== null){
         return value;
       }else {
@@ -29,86 +36,20 @@ export default class ContactList extends Component {
     }
   }
   componentWillMount() {
-    if (this.props.token==='')
-      this.checkLoggedIn().then((result)=> this.setState({token:result}));
- }
-
-  takePictureAndUpload() {
-   this.camera.capture()
-     .then((data) => {this.setState({image: data.path}); this.sendPhoto();})
-     .catch(err => console.error(err));
+    //this.getVariable(firstLaunch).then((result) => this.setState({firstLaunch: result}));
+    // if(this.props.gotResponse !==null && this.props.gotResponse ===true)
+    //   this.getVariable('allContacts').then((result)=> this.setState({allContacts:result})).then(()=>this.addContact()).then(()=>this.storeVariable(this.state.allContacts));
+    this.getVariable("token").then((result)=> this.setState({token:result})).then(()=> this.getAllContactsRequest());
   }
-  async storeVariables() {
+
+  async storeVariable(allContacts) {
     try {
-      await AsyncStorage.multiSet([['name', this.state.name], ['mobile', this.state.mobile], ['email', this.state.email]]);
+      await AsyncStorage.setItem('allContacts', allContacts );
     } catch (error) {
       console.log("uh oh no!!!");
     }
   }
 
-  sendPhoto(){
-    var token = this.props.token;
-    if (token==='') {
-      token=this.state.token;
-    }
-    let body = new FormData();
-    body.append('image', {uri: this.state.image, name: 'photo.jpg',type: 'image/jpg'});
-    body.append('token', token);
-    return fetch('http://production.cp8pxbibac.us-west-2.elasticbeanstalk.com/api/v1/search_user', {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: body
-    })
-    .then((response) => response.json())
-      .then((responseJson) => {
-        this.setState({showGif:false});
-        if (responseJson.code===0){
-          if (responseJson.hasOwnProperty("msg"))
-            this.setState({details: responseJson.msg, name:'', email:'', mobile:''});
-        }else if(responseJson.code===1){
-          if (responseJson.hasOwnProperty("user")){
-            this.setState({details: "Details-"});
-            this.setState({name:  "Name: " +responseJson.user.name});
-            this.setState({email: "Email: " +responseJson.user.email});
-            this.setState({mobile:"Mobile: " +responseJson.user.mobile});
-          }
-        }
-      })
-      .catch((error) => {
-        console.error(error);
-    });
-  }
-
-  async getVariables() {
-    try {
-      const value = await AsyncStorage.getItem('token');
-      if (value !== null)
-        return value;
-    } catch (error) {
-      console.log(":/");
-    }
-  }
-
-  renderGifOrButton(){
-    if(this.state.showGif == false){
-      return(
-        <TouchableHighlight style={styles.uploadHighlight} onPress={(showGif) => {this.setState({showGif:true}); this.takePictureAndUpload(); }} underlayColor="#8b0000">
-          <Text style={styles.uploadButton}>
-            Send
-          </Text>
-        </TouchableHighlight>
-      )
-    }else{
-      return (
-        <TouchableHighlight style={styles.uploadHighlight} underlayColor="#8b0000">
-          <Image source={require('./default.gif')} />
-        </TouchableHighlight>
-        )
-    }
-  }
   async clearStorage(){
     try {
       await AsyncStorage.clear();
@@ -116,101 +57,158 @@ export default class ContactList extends Component {
       console.log("uh oh no!!!");
     }
   }
-  renderImage() {
+
+  getAllContactsRequest(){
+    var that = this;
+    return fetch('http://production.cp8pxbibac.us-west-2.elasticbeanstalk.com/api/v1/get_all_contacts', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        token: that.state.token,
+      })
+    })
+    .then((response) => response.json())
+      .then((responseJson) => {
+        this.setState({allContacts:responseJson.connections, gotContacts:true})
+      })
+      .catch((error) => {
+        console.error(error);
+    });
+  }
+
+  renderAllContacts(){
+     const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
     return (
-      <View>
-        <Image
-          source={{ uri: this.state.image }}
-          style={styles.preview}
-        />
-        <TouchableHighlight style={styles.uploadHighlight} onPress={() => this.setState({ image: '' })} underlayColor="#8b0000">
-          <Text style={styles.capture}>Find another contact?</Text>
-        </TouchableHighlight>
-      </View>
+      <ListView
+        dataSource={ds.cloneWithRows(this.state.allContacts)}
+        renderRow={(rowData) => <Text>{rowData.name}</Text>}
+      />
     );
   }
-  renderCamera(){
-    return(
-      <View>
-        <Camera
-        ref={(cam) => {
-          this.camera = cam;
-        }}
-        style={styles.preview}
-        captureTarget = {Camera.constants.CaptureTarget.disk}
-        aspect={Camera.constants.Aspect.fill}
-        captureQuality={Camera.constants.CaptureQuality.medium}        
-        flashMode={Camera.constants.FlashMode.auto}>
-        </Camera>
-      </View>
-  )
-  }
-  renderImageOrCamera(){
 
-    if (this.state.image==='') {
-      return this.renderCamera();
-    }
-    else {
-      return this.renderImage();
-    }
+  showAllContacts(){
+    if (!this.state.gotContacts){
+      return (<ActivityIndicator />)
+    }else if(this.state.gotContacts){
+       return(this.renderAllContacts())
+     }
   }
+
+  getAllPendingContactsRequest(){
+    var that = this;
+    return fetch('http://production.cp8pxbibac.us-west-2.elasticbeanstalk.com/api/v1/get_pending_received_requests', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        token: that.state.token,
+      })
+    })
+    .then((response) => response.json())
+      .then((responseJson) => {
+      this.setState({gotContacts: true, allNewRequests: JSON.stringify(responseJson.connections)})
+      })
+      .catch((error) => {
+        console.error(error);
+    });
+  }
+
+  showAllPendingContacts(){
+    if (!this.state.gotContacts) {
+      return (<ActivityIndicator />)
+    }else if(this.state.gotContacts){
+       return(<Text>{this.state.allNewRequests}</Text>)
+     }
+  }
+
   render() {
     return (
       <View style= {styles.container}>
-        {this.renderImageOrCamera()}
-        {this.renderGifOrButton()}
-        <Text style = {styles.instructions}>
-          {this.state.details}
-        </Text>
-        <Text style = {styles.instructions}>
-          {this.state.name}
-        </Text>
-        <Text style = {styles.instructions}>
-          {this.state.email}
-        </Text>
-        <Text style = {styles.instructions}>
-          {this.state.mobile}
-        </Text>
-      <TouchableHighlight style={styles.uploadHighlight} onPress={() => {this.clearStorage(); this.props.navigator.replace({id: 'initial'});}} underlayColor="#8b0000">
-        <Text style={styles.uploadButton}>
-          wipe memory!
-        </Text>
-      </TouchableHighlight>
-    </View>
+        <View style= {styles.buttonContainer}>
+          <TouchableHighlight style={styles.contactsButton} onPress={() => {this.setState({gotContacts: false,showContacts: true}); this.showAllContacts();}} underlayColor="#8b0000">
+            <Text style={styles.headingButton}>
+              Contacts
+            </Text>
+          </TouchableHighlight>
+          <TouchableHighlight style={styles.newReqsButton} onPress={() => {this.setState({gotContacts: false,showContacts: false}); this.showAllPendingContacts(); }} underlayColor="#8b0000">
+            <Text style={styles.headingButton}>
+              New Requests
+            </Text>
+          </TouchableHighlight>
+        </View>
+        <View>
+        {this.showAllContacts()}
+        </View>
+        <View style= {styles.buttonContainer1}>
+          <TouchableHighlight style={styles.wipeButton} onPress={() => {this.clearStorage(); this.props.navigator.replace({id: 'initial'});}} underlayColor="#8b0000">
+            <Text style={styles.uploadButton}>
+              wipe memory!
+            </Text>
+          </TouchableHighlight>
+          <TouchableHighlight style={styles.connectButton} onPress={() => { this.props.navigator.replace({id: 'cameraSearch'});}} underlayColor="#8b0000">
+            <Text style={styles.uploadButton}>
+              connect!
+            </Text>
+          </TouchableHighlight>
+        </View>
+      </View>
     )
   }
 }
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F5FCFF',
+    justifyContent: 'space-between'
   },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
+  buttonContainer:{
+    width:Dimensions.get('window').width,
+    height:Dimensions.get('window').height/30,
+    flexDirection:'row',
+    justifyContent:"space-around",
+    marginTop: 30,
+    backgroundColor:"silver"
   },
-  instructions: {
-    color: '#333333',
-    marginTop: 20,
-    fontSize: 15
+  buttonContainer1:{
+    width:Dimensions.get('window').width,
+    height:Dimensions.get('window').height/22,
+    flexDirection:'row',
+    justifyContent:"space-around",
+    backgroundColor:"green",
   },
-  capture: {
+  contactsButton:{
+  },
+  newReqsButton:{
+  },
+  headingButton:{
+    color:"black"
+  },
+  wipeButton:{
+
+  },
+  connectButton:{
+
+  },
+  paneContainer:{
     alignSelf: 'center',
-    textAlign: 'center',
-    color: '#ffffff',
-  },
-  preview: {
-    width: 400,
-    height: 300
+    marginTop:Dimensions.get('window').width/2,
   },
   uploadHighlight: {
-    backgroundColor: "#D34836",
-    padding: 15,
-    borderRadius: 20,
-    alignSelf: 'center',
+    backgroundColor: "#F97240",
+    padding: 20,
+    borderRadius: 50,
+    marginTop: 10,
+  },
+  uploadHighlight1: {
+    backgroundColor: "red",
+    padding: 20,
+    borderRadius: 50,
     marginTop: 10,
   },
   uploadButton: {

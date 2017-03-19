@@ -17,7 +17,7 @@ import Camera from 'react-native-camera';
 export default class ContactList extends Component {
   constructor(props) {
     super(props);
-    this.state = {token:'', allContacts:'', allNewRequests:'', gotContacts:false, showContacts:true};
+    this.state = {token:'', allContacts:'', allNewRequests:'', gotContacts:false, showContacts:true, initialCall:true};
   }
   // addContact(){
   //   var array = JSON.parse(this.state.allContacts).concat({name:this.props.name, mobile:this.props.mobile, email:this.props.email})
@@ -79,25 +79,7 @@ export default class ContactList extends Component {
     });
   }
 
-  renderAllContacts(){
-     const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
-    return (
-      <ListView
-        dataSource={ds.cloneWithRows(this.state.allContacts)}
-        renderRow={(rowData) => <Text>{rowData.name}</Text>}
-      />
-    );
-  }
-
-  showAllContacts(){
-    if (!this.state.gotContacts){
-      return (<ActivityIndicator />)
-    }else if(this.state.gotContacts){
-       return(this.renderAllContacts())
-     }
-  }
-
-  getAllPendingContactsRequest(){
+  getAllNewRequestsRequest(){
     var that = this;
     return fetch('http://production.cp8pxbibac.us-west-2.elasticbeanstalk.com/api/v1/get_pending_received_requests', {
       method: 'POST',
@@ -111,18 +93,53 @@ export default class ContactList extends Component {
     })
     .then((response) => response.json())
       .then((responseJson) => {
-      this.setState({gotContacts: true, allNewRequests: JSON.stringify(responseJson.connections)})
+      this.setState({gotContacts: true, allNewRequests: responseJson.connections})
       })
       .catch((error) => {
         console.error(error);
     });
   }
 
-  showAllPendingContacts(){
-    if (!this.state.gotContacts) {
+  renderAllContacts(){
+     const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
+    return (
+      <ListView
+        dataSource={ds.cloneWithRows(this.state.allContacts)}
+        renderRow={(rowData) => (<View style={styles.listRowContainer}><Text style={styles.listRow}>{rowData.name}</Text></View>)}
+        renderSeparator={(sectionId, rowId) => <View key={rowId} style={styles.separator} />}
+      />
+    );
+  }
+  renderAllNewRequests(){
+     const dsa = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
+    return (
+      <ListView
+        dataSource={dsa.cloneWithRows(this.state.allNewRequests)}
+        renderRow={(rowData) => (<View style={styles.listRowContainer}><Text style={styles.listRow}>{rowData.name}</Text></View>)}
+        renderSeparator={(sectionId, rowId) => <View key={rowId} style={styles.separator} />}
+      />
+    );
+  }
+
+  showAllContacts(){
+    if (!this.state.gotContacts && this.state.initialCall){
       return (<ActivityIndicator />)
-    }else if(this.state.gotContacts){
-       return(<Text>{this.state.allNewRequests}</Text>)
+    }else if(this.state.gotContacts && this.state.initialCall){
+       return(this.renderAllContacts())
+    }
+  }
+  showAllContactsOnClick(){
+    if (!this.state.gotContacts && !this.state.initialCall && this.state.showContacts){
+      return (<ActivityIndicator />)
+    }else if(this.state.gotContacts && !this.state.initialCall && this.state.showContacts){
+       return(this.renderAllContacts())
+     }
+  }
+  showAllNewRequests(){
+    if (!this.state.gotContacts && !this.state.initialCall && !this.state.showContacts) {
+      return (<ActivityIndicator />)
+    }else if(this.state.gotContacts && !this.state.initialCall && !this.state.showContacts){
+       return(this.renderAllNewRequests())
      }
   }
 
@@ -130,27 +147,27 @@ export default class ContactList extends Component {
     return (
       <View style= {styles.container}>
         <View style= {styles.buttonContainer}>
-          <TouchableHighlight style={styles.contactsButton} onPress={() => {this.setState({gotContacts: false,showContacts: true}); this.showAllContacts();}} underlayColor="#8b0000">
+          <TouchableHighlight style={styles.contactsButton} onPress={() => {this.setState({gotContacts: false,showContacts: true, initialCall:false});this.getAllContactsRequest()}} underlayColor="white">
             <Text style={styles.headingButton}>
               Contacts
             </Text>
           </TouchableHighlight>
-          <TouchableHighlight style={styles.newReqsButton} onPress={() => {this.setState({gotContacts: false,showContacts: false}); this.showAllPendingContacts(); }} underlayColor="#8b0000">
+          <TouchableHighlight style={styles.newReqsButton} onPress={() => {this.setState({gotContacts: false,showContacts: false, initialCall:false}); this.getAllNewRequestsRequest()}} underlayColor="white">
             <Text style={styles.headingButton}>
               New Requests
             </Text>
           </TouchableHighlight>
         </View>
-        <View>
         {this.showAllContacts()}
-        </View>
+        {this.showAllContactsOnClick()}
+        {this.showAllNewRequests()}
         <View style= {styles.buttonContainer1}>
-          <TouchableHighlight style={styles.wipeButton} onPress={() => {this.clearStorage(); this.props.navigator.replace({id: 'initial'});}} underlayColor="#8b0000">
+          <TouchableHighlight style={styles.wipeButton} onPress={() => {this.clearStorage(); this.props.navigator.replace({id: 'initial'});}} underlayColor="white">
             <Text style={styles.uploadButton}>
               wipe memory!
             </Text>
           </TouchableHighlight>
-          <TouchableHighlight style={styles.connectButton} onPress={() => { this.props.navigator.replace({id: 'cameraSearch'});}} underlayColor="#8b0000">
+          <TouchableHighlight style={styles.connectButton} onPress={() => { this.props.navigator.replace({id: 'cameraSearch'});}} underlayColor="white">
             <Text style={styles.uploadButton}>
               connect!
             </Text>
@@ -214,5 +231,22 @@ const styles = StyleSheet.create({
   uploadButton: {
     color: "#ffffff",
     fontWeight: "600"
+  },
+  listRow:{
+    fontSize: 16,
+  },
+  listRowContainer:{
+    flex: 1,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent:'center',
+    backgroundColor:'#EAEAEA',
+    width:Dimensions.get('window').width,
+  },
+  separator: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: '#8E8E8E',
   },
 });

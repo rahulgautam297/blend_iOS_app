@@ -72,7 +72,7 @@ export default class Signin extends Component {
   }
   async storeVariables(responseJson) {
     try {
-      await AsyncStorage.multiSet([['name', responseJson.user.name], ['mobile', responseJson.user.mobile], ['email', responseJson.user.email], ['token', responseJson.token], ['allContacts', JSON.stringify([])]]);
+      await AsyncStorage.multiSet([['name', responseJson.user.name], ['mobile', responseJson.user.mobile], ['email', responseJson.user.email], ['token', responseJson.token]]);
     } catch (error) {
       console.log("uh oh no!!!");
     }

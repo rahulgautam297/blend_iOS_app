@@ -17,7 +17,7 @@ export default class CameraSearch extends Component {
 
   constructor(props) {
     super(props);
-    this.state = { showGif: false, token:'',error:'', showError:false};
+    this.state = { showGif: false, token:'',error:'', showError:false, image:''};
   }
   async checkLoggedIn() {
     try {
@@ -60,11 +60,9 @@ export default class CameraSearch extends Component {
          this.setState({showGif:false});
         if (responseJson.code===0){
           if (responseJson.hasOwnProperty("msg"))
-            this.setState({error: responseJson.msg, showError:true});
+            this.setState({error: responseJson.msg, showError:true, image:''});
         }else if(responseJson.code===1){
-          if (responseJson.hasOwnProperty("user")){
-            this.props.navigator.replace({id: 'contactList', name:responseJson.user.name, mobile:responseJson.user.mobile, email:responseJson.user.email, gotResponse:true});
-          }
+            this.props.navigator.replace({id: 'contactList', gotResponse:true});
         }
       })
       .catch((error) => {
@@ -81,9 +79,25 @@ export default class CameraSearch extends Component {
         captureTarget = {Camera.constants.CaptureTarget.disk}
         captureQuality={Camera.constants.CaptureQuality.high}
         aspect={Camera.constants.Aspect.fill}
-        mirrorImage={true}>
+        flashMode={Camera.constants.TorchMode.auto}>
         </Camera>
   )
+  }
+  renderImage() {
+    return (
+        <Image
+          source={{ uri: this.state.image }}
+          style={styles.preview}
+        />
+    );
+  }
+  renderImageOrCamera(){
+    if (this.state.image==='') {
+      return this.renderCamera();
+    }
+    else {
+      return this.renderImage();
+    }
   }
   errorInfo(){
     if(this.state.showError == true){
@@ -127,7 +141,7 @@ export default class CameraSearch extends Component {
   render() {
     return (
       <View style={styles.container}>
-        {this.renderCamera()}
+        {this.renderImageOrCamera()}
         {this.renderButtonOrGif()}
       </View>
     );

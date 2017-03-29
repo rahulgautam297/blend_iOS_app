@@ -17,16 +17,12 @@ import Camera from 'react-native-camera';
 export default class ContactList extends Component {
   constructor(props) {
     super(props);
-    this.state = {token:'', allContacts:'', allNewRequests:'', gotContacts:false, showContacts:true, initialCall:true};
+    this.state = {token:'', contacts:'', requests:'', gotData:false, showContacts:true, sync:''};
   }
-  // addContact(){
-  //   var array = JSON.parse(this.state.allContacts).concat({name:this.props.name, mobile:this.props.mobile, email:this.props.email})
-  //   this.setState({allContacts: JSON.stringify(array)});
-  // }
-  async getVariable(item) {
+  async getVariable(item1,item2) {
     try {
-      const value = await AsyncStorage.getItem(item);
-      if (value !== null){
+      const value = await AsyncStorage.multiGet([item1, item2]);
+      if (value[0][1] !== null){
         return value;
       }else {
         return false;
@@ -36,20 +32,47 @@ export default class ContactList extends Component {
     }
   }
   componentWillMount() {
-    //this.getVariable(firstLaunch).then((result) => this.setState({firstLaunch: result}));
-    // if(this.props.gotResponse !==null && this.props.gotResponse ===true)
-    //   this.getVariable('allContacts').then((result)=> this.setState({allContacts:result})).then(()=>this.addContact()).then(()=>this.storeVariable(this.state.allContacts));
-    this.getVariable("token").then((result)=> this.setState({token:result})).then(()=> this.getAllContactsRequest());
+    this.getVariable("token", "sync").then((result)=> this.setState({token:result[0][1], sync:result[1][1]})).then(()=> {
+      if(this.state.sync==null){
+        this.getContactsRequest().then(() => this.syncDone())
+      }else if(this.state.sync === "1"){
+        this.loadFromStorage();
+      }
+    });
   }
 
-  async storeVariable(allContacts) {
+  loadFromStorage(){
+    var RNFS = require('react-native-fs');
+    RNFS.readDir(RNFS.DocumentDirectoryPath)
+    .then((result) => {
+        var contacts = null;
+        for (var i = 0; i < result.length; i++) {
+          if (result[i].name==='contacts.txt'){
+            contacts = result[i];
+            break;
+          }
+        }
+        return contacts;
+      })
+      .then((contacts) => {
+        contactsList = RNFS.readFile(contacts.path, 'utf8');
+        return contactsList;
+      })
+      .then((contactsList) => {
+        hash = JSON.parse(contactsList);
+        this.setState({contacts: hash['contactsList'], requests: hash['requestsList'], gotData:true});
+      })
+      .catch((err) => {
+        console.log(err.message, err.code);
+      });
+  }
+  async syncDone() {
     try {
-      await AsyncStorage.setItem('allContacts', allContacts );
+      await AsyncStorage.setItem('sync', "1");
     } catch (error) {
       console.log("uh oh no!!!");
     }
   }
-
   async clearStorage(){
     try {
       await AsyncStorage.clear();
@@ -58,7 +81,7 @@ export default class ContactList extends Component {
     }
   }
 
-  getAllContactsRequest(){
+  getContactsRequest(){
     var that = this;
     return fetch('http://production.cp8pxbibac.us-west-2.elasticbeanstalk.com/api/v1/get_all_contacts', {
       method: 'POST',
@@ -72,74 +95,55 @@ export default class ContactList extends Component {
     })
     .then((response) => response.json())
       .then((responseJson) => {
-        this.setState({allContacts:responseJson.connections, gotContacts:true})
+        this.setState({contacts:responseJson.connections, requests:responseJson.requests, gotData:true})
+        var hash={}
+        hash['contactsList'] = responseJson.connections;
+        hash['requestsList'] = responseJson.requests;
+        var RNFS = require('react-native-fs');
+        var path = RNFS.DocumentDirectoryPath + '/contacts.txt';
+        RNFS.writeFile(path, JSON.stringify(hash), 'utf8')
+        return responseJson
       })
       .catch((error) => {
         console.error(error);
     });
   }
 
-  getAllNewRequestsRequest(){
-    var that = this;
-    return fetch('http://production.cp8pxbibac.us-west-2.elasticbeanstalk.com/api/v1/get_pending_received_requests', {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        token: that.state.token,
-      })
-    })
-    .then((response) => response.json())
-      .then((responseJson) => {
-      this.setState({gotContacts: true, allNewRequests: responseJson.connections})
-      })
-      .catch((error) => {
-        console.error(error);
-    });
-  }
-
-  renderAllContacts(){
+  renderContacts(){
      const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
     return (
       <ListView
-        dataSource={ds.cloneWithRows(this.state.allContacts)}
+        enableEmptySections={true}
+        dataSource={ds.cloneWithRows(this.state.contacts)}
         renderRow={(rowData) => (<View style={styles.listRowContainer}><Text style={styles.listRow}>{rowData.name}</Text></View>)}
         renderSeparator={(sectionId, rowId) => <View key={rowId} style={styles.separator} />}
       />
     );
   }
-  renderAllNewRequests(){
+  renderRequests(){
      const dsa = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
     return (
       <ListView
-        dataSource={dsa.cloneWithRows(this.state.allNewRequests)}
+        enableEmptySections={true}
+        dataSource={dsa.cloneWithRows(this.state.requests)}
         renderRow={(rowData) => (<View style={styles.listRowContainer}><Text style={styles.listRow}>{rowData.name}</Text></View>)}
         renderSeparator={(sectionId, rowId) => <View key={rowId} style={styles.separator} />}
       />
     );
   }
 
-  showAllContacts(){
-    if (!this.state.gotContacts && this.state.initialCall){
+  showContacts(){
+    if (!this.state.gotData && this.state.showContacts){
       return (<ActivityIndicator />)
-    }else if(this.state.gotContacts && this.state.initialCall){
-       return(this.renderAllContacts())
+    }else if(this.state.gotData && this.state.showContacts){
+       return(this.renderContacts())
     }
   }
-  showAllContactsOnClick(){
-    if (!this.state.gotContacts && !this.state.initialCall && this.state.showContacts){
+  showRequests(){
+    if (!this.state.gotData && !this.state.showContacts) {
       return (<ActivityIndicator />)
-    }else if(this.state.gotContacts && !this.state.initialCall && this.state.showContacts){
-       return(this.renderAllContacts())
-     }
-  }
-  showAllNewRequests(){
-    if (!this.state.gotContacts && !this.state.initialCall && !this.state.showContacts) {
-      return (<ActivityIndicator />)
-    }else if(this.state.gotContacts && !this.state.initialCall && !this.state.showContacts){
-       return(this.renderAllNewRequests())
+    }else if(this.state.gotData && !this.state.showContacts){
+       return(this.renderRequests())
      }
   }
 
@@ -147,20 +151,19 @@ export default class ContactList extends Component {
     return (
       <View style= {styles.container}>
         <View style= {styles.buttonContainer}>
-          <TouchableHighlight style={styles.contactsButton} onPress={() => {this.setState({gotContacts: false,showContacts: true, initialCall:false});this.getAllContactsRequest()}} underlayColor="white">
+          <TouchableHighlight style={styles.contactsButton} onPress={() => {this.setState({showContacts: true});}} underlayColor="white">
             <Text style={styles.headingButton}>
               Contacts
             </Text>
           </TouchableHighlight>
-          <TouchableHighlight style={styles.newReqsButton} onPress={() => {this.setState({gotContacts: false,showContacts: false, initialCall:false}); this.getAllNewRequestsRequest()}} underlayColor="white">
+          <TouchableHighlight style={styles.newReqsButton} onPress={() => {this.setState({showContacts: false});}} underlayColor="white">
             <Text style={styles.headingButton}>
               New Requests
             </Text>
           </TouchableHighlight>
         </View>
-        {this.showAllContacts()}
-        {this.showAllContactsOnClick()}
-        {this.showAllNewRequests()}
+        {this.showContacts()}
+        {this.showRequests()}
         <View style= {styles.buttonContainer1}>
           <TouchableHighlight style={styles.wipeButton} onPress={() => {this.clearStorage(); this.props.navigator.replace({id: 'initial'});}} underlayColor="white">
             <Text style={styles.uploadButton}>

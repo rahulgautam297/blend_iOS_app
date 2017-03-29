@@ -11,13 +11,29 @@ import {
   TouchableHighlight,
   Image,
   AsyncStorage,
+  ActivityIndicator
 } from 'react-native';
 import Camera from 'react-native-camera';
 export default class SignupCamera extends Component {
 
   constructor(props) {
     super(props);
-    this.state = { image:'', twoButtons: false};
+    this.state = {image:'', twoButtons: false, token:'', showGif:false, error:'', showError:false};
+  }
+  async getToken() {
+    try {
+      const value = await AsyncStorage.getItem('token');
+      if (value !== null){
+        return value;
+      }else {
+        return false;
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  componentWillMount() {
+      this.getToken().then((result)=> this.setState({token:result}));
   }
   takePicture() {
     this.camera.capture()
@@ -45,10 +61,9 @@ export default class SignupCamera extends Component {
         aspect={Camera.constants.Aspect.fill}
         mirrorImage={true}>
         </Camera>
-  )
+    )
   }
   renderImageOrCamera(){
-
     if (this.state.image==='') {
       return this.renderCamera();
     }
@@ -56,14 +71,48 @@ export default class SignupCamera extends Component {
       return this.renderImage();
     }
   }
+  sendPhoto(){
+    var token =''
+    if (this.props.token ===null || this.props.token ===''){
+        token=this.state.token;
+    }
+    else {
+      console.log("token from props");
+      token=this.props.token;
+    }
+    let body = new FormData();
+    body.append('image', {uri: this.state.image, name: 'photo.jpg', type: 'image/jpg'});
+    body.append('token', token);
+    return fetch('http://production.cp8pxbibac.us-west-2.elasticbeanstalk.com/api/v1/upload_selfie', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: body
+    })
+    .then((response) => response.json())
+      .then((responseJson) => {
+        console.log(responseJson);
+         this.setState({showGif:false});
+        if (responseJson.code===0){
+          this.setState({error: responseJson.msg, showError:true, twoButtons:false,image:''});
+        }else if(responseJson.code===1){
+          this.props.navigator.replace({id: 'contactList'});
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+    });
+  }
   renderButtonOrTwoButtons(){
-    if(this.state.twoButtons == false){
+    if(this.state.twoButtons == false && this.state.showGif == false){
       return(
-        <TouchableHighlight style={styles.uploadHighlight} onPress={(twoButtons) =>{this.takePicture(); }} underlayColor="#ffffff">
+        <TouchableHighlight style={styles.uploadHighlight} onPress={() =>{this.setState({showError: false, error:''}); this.takePicture();}} underlayColor="#ffffff">
           <Image source={require('./camera_button.png')}  style={styles.imageButton} />
         </TouchableHighlight>
       )
-    }else{
+    }else if(this.state.twoButtons == true && this.state.showGif == false){
       return (
         <View style={styles.twoButtonsView}>
           <View style={styles.clickAgainView}>
@@ -75,12 +124,24 @@ export default class SignupCamera extends Component {
               </TouchableHighlight>
           </View>
           <View style={styles.uploadView}>
-            <TouchableHighlight style={styles.highlightUpload} onPress={() => {
-             this.props.navigator.replace({id: 'signup',image: this.state.image});}} underlayColor="#ffffff">
+            <TouchableHighlight style={styles.highlightUpload} onPress={() => {this.setState({showGif: true}); this.sendPhoto();}} underlayColor="#ffffff">
               <Image source={require('./button.png')} style={styles.imageButton3}/>
             </TouchableHighlight>
           </View>
         </View>
+      )
+    }else if(this.state.twoButtons == true && this.state.showGif == true){
+      return(
+        <TouchableHighlight style={styles.uploadHighlight}  underlayColor="#ffffff">
+          <ActivityIndicator />
+        </TouchableHighlight>
+      )
+    }
+  }
+  errorInfo(){
+    if(this.state.showError == true){
+      return(
+        <Text> {this.state.error} </Text>
       )
     }
   }
@@ -88,6 +149,7 @@ export default class SignupCamera extends Component {
     return (
       <View style={styles.container}>
         {this.renderImageOrCamera()}
+        {this.errorInfo()}
         {this.renderButtonOrTwoButtons()}
       </View>
     );

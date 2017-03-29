@@ -13,7 +13,7 @@ export default class InitialScreen extends Component {
     return (
       <View style={styles.container}>
         <Image source={require('./initial.jpg')} style={styles.backgroundImage} >
-          <TouchableHighlight style={styles.textHighlight} onPress={() =>{this.props.navigator.replace({id: 'signupCamera'});}} underlayColor="#8b0000">
+          <TouchableHighlight style={styles.textHighlight} onPress={() =>{this.props.navigator.replace({id: 'signup'});}} underlayColor="#8b0000">
             <Text style={styles.buttons}>
               Sign Up
               </Text>

@@ -38,8 +38,7 @@ export default class OtpScreen extends Component {
             this.setState({otpError: responseJson.msg});
         }else if(responseJson.code===1){
           if (responseJson.hasOwnProperty("token"))
-            this.storeVariables(responseJson.token)
-          this.props.navigator.replace({id: 'contactList'});
+            this.storeVariables(responseJson.token).then(() => this.props.navigator.replace({id: 'signupCamera', token:responseJson.token }))
         }
       })
       .catch((error) => {
@@ -48,7 +47,7 @@ export default class OtpScreen extends Component {
   }
   async storeVariables(token) {
     try {
-      await AsyncStorage.multiSet([['name', this.props.name], ['mobile', this.props.mobile], ['email', this.props.email], ['token', token], ['allContacts', JSON.stringify([])]]);
+      await AsyncStorage.multiSet([['name', this.props.name], ['mobile', this.props.mobile], ['email', this.props.email], ['token', token]]);
     } catch (error) {
       console.log("uh oh no!!!");
     }

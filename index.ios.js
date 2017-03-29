@@ -107,7 +107,7 @@
     }else if (routeId === 'signupCamera') {
       return (
         <SignupCamera
-        navigator={navigator}/>
+        navigator={navigator}token={route.token}/>
       );
     }else if (routeId === 'cameraSearch') {
       return (

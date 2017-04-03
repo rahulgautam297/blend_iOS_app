@@ -63,6 +63,14 @@ export default class SignupCamera extends Component {
         </Camera>
     )
   }
+
+  async storeStatus() {
+    try {
+      await AsyncStorage.multiSet([['status', '1']]);
+    } catch (error) {
+      console.log("uh oh no!!!");
+    }
+  }
   renderImageOrCamera(){
     if (this.state.image==='') {
       return this.renderCamera();
@@ -98,7 +106,7 @@ export default class SignupCamera extends Component {
         if (responseJson.code===0){
           this.setState({error: responseJson.msg, showError:true, twoButtons:false,image:''});
         }else if(responseJson.code===1){
-          this.props.navigator.replace({id: 'contactList'});
+          this.storeStatus().then(() => {this.props.navigator.replace({id: 'contactList'});})
         }
       })
       .catch((error) => {

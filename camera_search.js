@@ -71,24 +71,30 @@ export default class CameraSearch extends Component {
   }
   renderCamera(){
     return(
-        <Camera
-        ref={(cam) => {
-          this.camera = cam;
-        }}
-        style={styles.preview}
-        captureTarget = {Camera.constants.CaptureTarget.disk}
-        captureQuality={Camera.constants.CaptureQuality.high}
-        aspect={Camera.constants.Aspect.fill}
-        flashMode={Camera.constants.TorchMode.auto}>
-        </Camera>
-  )
+              <Camera
+              ref={(cam) => {
+                this.camera = cam;
+              }}
+              style={styles.preview}
+              captureTarget = {Camera.constants.CaptureTarget.disk}
+              captureQuality={Camera.constants.CaptureQuality.high}
+              aspect={Camera.constants.Aspect.fill}
+              flashMode={Camera.constants.TorchMode.auto}>
+              <TouchableHighlight onPress={() =>{this.props.navigator.replace({id: 'contactList'}); }}>
+                <Image source={require('./cross.png')}  style={styles.crossButton} />
+              </TouchableHighlight>
+              {this.renderButtonOrGif()}
+              </Camera>
+          )
   }
   renderImage() {
     return (
         <Image
           source={{ uri: this.state.image }}
-          style={styles.preview}
-        />
+          style={styles.previewImage}
+        >
+          {this.renderButtonOrGif()}
+        </Image>
     );
   }
   renderImageOrCamera(){
@@ -112,7 +118,7 @@ export default class CameraSearch extends Component {
         <View style={styles.buttonView}>
           {this.errorInfo()}
           <TouchableHighlight style={styles.uploadHighlight} onPress={(showGif) =>{this.takePictureAndUpload(); }} underlayColor="#ffffff">
-            <Text style={styles.plusButton}>+</Text>
+          <Text></Text>
           </TouchableHighlight>
         </View>
       )
@@ -142,7 +148,6 @@ export default class CameraSearch extends Component {
     return (
       <View style={styles.container}>
         {this.renderImageOrCamera()}
-        {this.renderButtonOrGif()}
       </View>
     );
   }
@@ -154,13 +159,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
   },
   preview: {
-    flex:0.8125,
+    flex:1,
+    justifyContent: 'space-between',
+    width:Dimensions.get('window').width,
+  },
+  previewImage: {
+    flex:1,
+    justifyContent: 'flex-end',
     width:Dimensions.get('window').width,
   },
   buttonView:{
-    flex:0.1875,
     alignItems: 'center',
     justifyContent:'center',
+    marginBottom:20
   },
   uploadHighlight: {
     backgroundColor: '#FF4500',
@@ -178,13 +189,14 @@ const styles = StyleSheet.create({
     width:30,
     height:30,
   },
+  crossButton: {
+    width:25,
+    height:25,
+    marginTop:30,
+    marginLeft:15
+  },
   imageButton2: {
     width:20,
     height:20,
   },
-  plusButton:{
-    fontSize: 40,
-    fontWeight:'bold',
-    color:'#ffffff',
-  }
 });

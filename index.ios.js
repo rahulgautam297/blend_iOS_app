@@ -16,6 +16,7 @@
  import InitialScreen from './initial_screen.js';
  import SignupCamera from './signup_camera.js';
  import CameraSearch from './camera_search.js';
+ import Card from './card.js';
  class Lucido extends Component {
    constructor(props) {
      super(props);
@@ -113,6 +114,11 @@
       return (
         <CameraSearch
         navigator={navigator} token={this.state.token}/>
+      );
+    }else if (routeId === 'card') {
+      return (
+        <Card
+        navigator={navigator} mobile={route.mobile} email={route.email} name={route.name}/>
       );
     }
   }

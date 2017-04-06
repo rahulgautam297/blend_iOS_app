@@ -16,6 +16,7 @@
  import InitialScreen from './initial_screen.js';
  import SignupCamera from './signup_camera.js';
  import CameraSearch from './camera_search.js';
+ import EditProfile  from './edit_profile.js'
  import Card from './card.js';
  class Lucido extends Component {
    constructor(props) {
@@ -119,6 +120,10 @@
       return (
         <Card
         navigator={navigator} mobile={route.mobile} email={route.email} name={route.name}/>
+      );
+    }else if (routeId === 'editProfile') {
+      return (
+        <EditProfile navigator={navigator} />
       );
     }
   }

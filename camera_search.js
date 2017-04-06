@@ -80,7 +80,7 @@ export default class CameraSearch extends Component {
               captureQuality={Camera.constants.CaptureQuality.high}
               aspect={Camera.constants.Aspect.fill}
               flashMode={Camera.constants.TorchMode.auto}>
-              <TouchableHighlight onPress={() =>{this.props.navigator.replace({id: 'contactList'}); }}>
+              <TouchableHighlight style={styles.crossButtonTouch} onPress={() =>{this.props.navigator.replace({id: 'contactList'}); }}>
                 <Image source={require('./cross.png')}  style={styles.crossButton} />
               </TouchableHighlight>
               {this.renderButtonOrGif()}
@@ -198,5 +198,9 @@ const styles = StyleSheet.create({
   imageButton2: {
     width:20,
     height:20,
+  },
+  crossButtonTouch:{
+    width:50,
+    height:50,
   },
 });

@@ -11,9 +11,9 @@ import {
   TouchableHighlight,
   Image,
   AsyncStorage,
-  ActivityIndicator
+  ActivityIndicator,
+  CameraScroll,
 } from 'react-native';
-import Camera from 'react-native-camera';
 export default class SignupCamera extends Component {
 
   constructor(props) {

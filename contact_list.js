@@ -20,7 +20,8 @@ import DrawerPanel from './drawer_panel.js';
 export default class ContactList extends Component {
   constructor(props) {
     super(props);
-    this.state = {token:'', contacts:'', requests:'', name:'', gotData:false, refreshing:false, showContacts:true, sync:'', inTransition:false, acceptAI:false, rejectAI:false, reportAI:false, status:"1"};
+    this.state = {token:'', contacts:'', requests:'', name:'', gotData:false, refreshing:false, showContacts:true, sync:'',
+     inTransition:false, acceptAI:false, rejectAI:false, reportAI:false, status:"1", inTransition:false,searchText:"",showSearchBar:false, contactsCopy:'', requestsCopy:''};
   }
   async getVariable(item1, item2, item3, item4) {
     try {
@@ -35,7 +36,8 @@ export default class ContactList extends Component {
     }
   }
   componentWillMount() {
-    this.getVariable("token", "sync", "name", "status").then((result)=> this.setState({token:result[0][1], sync:result[1][1], name:result[2][1], status:result[3][1]})).then(()=> {
+    this.getVariable("token", "sync", "name", "status").then((result)=> this.setState({token:result[0][1], sync:result[1][1], name:result[2][1],
+       status:result[3][1]})).then(()=> {
       if(this.state.sync==null){
         this.getContactsRequest().then(() => this.syncDone())
       }else if(this.state.sync === "1"){
@@ -166,7 +168,7 @@ export default class ContactList extends Component {
            underlayColor="white" style={styles.rowTouchableButton}>
            <View style={styles.rowContentContainer}>
            <View style={styles.testImageContainer}>
-              <Image source={require('./logo.png')}  style={styles.testImage} />
+              <Image source={require('./sandra.png')}  style={styles.testImage} />
             </View>
             <View style={styles.rowContentTextContainer}>
               <Text style={styles.rowName}>{rowData.name}</Text>
@@ -181,6 +183,7 @@ export default class ContactList extends Component {
      const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
     return (
       <ListView
+        keyboardShouldPersistTaps={'always'}
         enableEmptySections={true}
         dataSource={ds.cloneWithRows(this.state.contacts)}
         renderRow={(rowData) => (this.renderContact(rowData))}
@@ -248,7 +251,7 @@ export default class ContactList extends Component {
     if(stateName==false){
       return(
         <TouchableHighlight style={styles.newReqsButton} disabled={this.state.inTransition}
-         onPress={() => {this.setState({inTransition:true,acceptAI:true}); this.acceptDeclineOrBlock(c_id ,select);}} underlayColor="white">
+         onPress={() => {this.setState({inTransition:true,acceptAI:true}); this.acceptDeclineOrBlock(c_id ,select);}} underlayColor="transparent">
           <Image source={require('./accept.png')}  style={styles.imageButton} />
         </TouchableHighlight>
       )
@@ -260,7 +263,7 @@ export default class ContactList extends Component {
     if(stateName==false){
       return(
         <TouchableHighlight style={styles.newReqsButton} disabled={this.state.inTransition}
-         onPress={() => {this.setState({inTransition:true,rejectAI:true}); this.acceptDeclineOrBlock(c_id ,select);}} underlayColor="white">
+         onPress={() => {this.setState({inTransition:true,rejectAI:true}); this.acceptDeclineOrBlock(c_id ,select);}} underlayColor="transparent">
           <Image source={require('./reject.png')}  style={styles.imageButton} />
         </TouchableHighlight>
       )
@@ -273,7 +276,7 @@ export default class ContactList extends Component {
     if(stateName==false){
       return(
         <TouchableHighlight style={styles.reportButton} disabled={this.state.inTransition}
-         onPress={() => {this.setState({inTransition:true,reportAI:true});this.acceptDeclineOrBlock(c_id, 2);}} underlayColor="white">
+         onPress={() => {this.setState({inTransition:true,reportAI:true});this.acceptDeclineOrBlock(c_id, 2);}} underlayColor="transparent">
           <Text style={styles.reportText}>REPORT</Text>
         </TouchableHighlight>
       )
@@ -287,6 +290,7 @@ export default class ContactList extends Component {
     return (
       <ListView
         enableEmptySections={true}
+        keyboardShouldPersistTaps={'always'}
         dataSource={dsa.cloneWithRows(this.state.requests)}
         renderRow = {(rowData) => (
                                   <View style={styles.listRowContainer}>
@@ -325,6 +329,93 @@ export default class ContactList extends Component {
      }
   }
 
+  async changeStatusInStorage(value){
+    try {
+      await AsyncStorage.setItem('status', value);
+    } catch (error) {
+      console.log("uh oh no!!!");
+    }
+  }
+
+  changeSearchStatus(status){
+    this.setState({inTransition:true})
+    var that = this;
+    return fetch('http://production.cp8pxbibac.us-west-2.elasticbeanstalk.com/api/v1/set_search_status', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        token: that.state.token,
+        search_status: status
+      })
+    })
+    .then((response) => response.json())
+      .then(() => {
+        this.changeStatusInStorage(status);
+      })
+      .then(() => {
+        this.setState({status: status,inTransition:false});
+      })
+      .catch((error) => {
+        console.error(error);
+    });
+  }
+
+  changeActiveStatus(){
+    if (this.state.status==="1"){
+      this.changeSearchStatus("0");
+    }else if (this.state.status==="0"){
+      this.changeSearchStatus("1");
+    }
+  }
+
+  searchBar(){
+    //Can be optimized by checking the text input size. If it's less set state again of copies to originals
+    if (this.state.showSearchBar)
+    return(
+      <View style={styles.searchBoxContainer}>
+        <TextInput
+        ref="searchInput"
+         style={styles.searchBar}
+         value={this.state.searchText}
+         onChangeText={(searchText) => {this.setState({searchText:searchText},this.searchContacts(searchText));}}
+         placeholder="Search"
+         returnKeyType={"search"}
+         autoFocus={true}
+         onFocus={()=>{this.setState({contactsCopy: this.state.contacts, requestsCopy:this.state.requests})}}
+         keyboardAppearance={"dark"}/>
+         <TouchableHighlight style={styles.cancelButton} onPress={() => {this.refs.searchInput.blur()
+         this.setState({showSearchBar:false,searchText:'',contacts: this.state.contactsCopy, requests:this.state.requestsCopy});}} underlayColor="transparent">
+             <Text style={styles.cancelText}>Cancel</Text>
+         </TouchableHighlight>
+       </View>
+    )
+  }
+
+  searchContacts(text){
+    if(this.state.showContacts){
+      var array = this.state.contactsCopy;
+      var sorted=[]
+      for (var i=0; i<array.length; i++) {
+          if (array[i].name.toLowerCase().indexOf(text.toLowerCase()) == 0){
+            sorted.push(array[i]);
+          }
+      }
+      this.setState({contacts:sorted});
+    }else if(!this.state.showContacts){
+      var array = this.state.requestsCopy;
+      var sorted=[]
+      for (var i=0; i<array.length; i++) {
+          if (array[i].name.toLowerCase().indexOf(text.toLowerCase())==0){
+            sorted.push(array[i]);
+          }
+      }
+      this.setState({requests:sorted});
+    }
+  }
+
   render() {
     var drawerStyles = {
        drawer: { shadowColor: '#000000', shadowOpacity: 0.8, shadowRadius: 3, backgroundColor:'white'},
@@ -334,7 +425,9 @@ export default class ContactList extends Component {
       <Drawer
         ref={(ref) => this.drawer = ref}
         type="overlay"
-        content={<DrawerPanel name = {this.state.name} status = {this.state.status} wipe={this.clearEverything.bind(this)}></DrawerPanel>}
+        content={<DrawerPanel name = {this.state.name}  status = {this.state.status}
+        wipe={this.clearEverything.bind(this)} inTransition={this.state.inTransition}
+         changeStatus={this.changeActiveStatus.bind(this)} navigate={this.props.navigator}></DrawerPanel>}
         tapToClose={true}
          openDrawerOffset={0.2}
          panCloseMask={0.2}
@@ -350,22 +443,23 @@ export default class ContactList extends Component {
                 <Image source={require('./drawer.png')}  style={styles.drawerImage} />
             </TouchableHighlight>
             <Image source={require('./logo.png')}  style={styles.logoImage} />
-            <TouchableHighlight style={styles.newReqsButton} onPress={() => {this.setState({showContacts: false});}} underlayColor="white">
+            <TouchableHighlight style={styles.newReqsButton} onPress={() => {this.setState({showSearchBar: true})}} underlayColor="transparent">
                 <Image source={require('./search.png')}  style={styles.searchImage} />
             </TouchableHighlight>
           </View>
           <View style= {styles.buttonContainer}>
-            <TouchableHighlight style={styles.contactsButton} onPress={() => {this.setState({showContacts: true});}} underlayColor="white">
+            <TouchableHighlight style={styles.contactsButton} onPress={() => {this.setState({showContacts: true});}} underlayColor="transparent">
               <Text style={styles.headingButton}>
                 FACES
               </Text>
             </TouchableHighlight>
-            <TouchableHighlight style={styles.newReqsButton} onPress={() => {this.setState({showContacts: false});}} underlayColor="white">
+            <TouchableHighlight style={styles.newReqsButton} onPress={() => {this.setState({showContacts: false});}} underlayColor="transparent">
               <Text style={styles.headingButton}>
                 REQUESTS
               </Text>
             </TouchableHighlight>
           </View>
+          {this.searchBar()}
           {this.showContacts()}
           {this.showRequests()}
           <View style= {styles.addContactButtonContainer}>
@@ -426,7 +520,7 @@ const styles = StyleSheet.create({
   },
   rowTouchableButton:{
     width:Dimensions.get('window').width,
-    height:85,
+    height:70,
   },
   rowContentTextContainer:{
     flex: 1,
@@ -482,18 +576,40 @@ const styles = StyleSheet.create({
     overflow:'hidden'
   },
   addContactButtonContainer:{
-    height:Dimensions.get('window').height/10,
-    backgroundColor:"grey",
+    height:Dimensions.get('window').height/8,
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
   addButtonTouch:{
-    width:100,
-    height:100,
-
+    width:80,
+    height:80,
+    alignItems: 'center',
+    justifyContent: 'flex-start'
   },
   addContactImage:{
-    width:100,
-    height:100,
+    width:80,
+    height:80,
+  },
+  searchBar: {
+  paddingLeft: 30,
+  fontSize: 22,
+  height: Dimensions.get('window').height/12,
+  width:Dimensions.get('window').width*0.8,
+  borderWidth: 7,
+  borderColor: "#E4E4E4",
+  },
+  searchBoxContainer:{
+    height: Dimensions.get('window').height/12,
+    width:Dimensions.get('window').width,
+    flexDirection:"row",
+  },
+  cancelButton:{
+    width:Dimensions.get('window').width*0.2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelText:{
+    fontWeight:'bold',
+    fontSize:17,
   }
 });

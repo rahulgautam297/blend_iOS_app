@@ -10,7 +10,8 @@ import {
   Image,
   Dimensions,
   ListView,
-  Switch} from 'react-native';
+  Switch,
+  ActivityIndicator} from 'react-native';
 export default class DrawerPanel extends Component {
 
   constructor(props) {
@@ -20,8 +21,43 @@ export default class DrawerPanel extends Component {
   setSwitchValue(){
     if(this.props.status==="1"){
       return true;
-    }else {
+    }else if(this.props.status==="0"){
       return false;
+    }
+  }
+
+  showRelevantText(){
+    if(this.props.status==="1"){
+      return(
+        <View style={styles.statusTextContainer}>
+          <View style={styles.circularStatus}></View>
+          <Text style={styles.statusText}>Active</Text>
+        </View>
+      )
+    }else if(this.props.status==="0"){
+      return(
+        <View style={styles.statusTextContainer}>
+          <View style={styles.circularInactiveStatus}></View>
+          <Text style={styles.statusText}>Inactive</Text>
+        </View>
+      )
+    }
+  }
+  showSwitchOrGif(){
+    if (this.props.inTransition == false){
+      return(
+        <View style={styles.switchContainer}>
+          <Switch value={this.setSwitchValue()}
+          onValueChange={() => this.props.changeStatus()}>
+          </Switch>
+        </View>
+      )
+    }else if(this.props.inTransition == true){
+      return(
+        <View style={styles.switchContainer}>
+          <ActivityIndicator />
+        </View>
+      )
     }
   }
   render() {
@@ -30,21 +66,18 @@ export default class DrawerPanel extends Component {
         <View style={styles.paneRoof}>
         </View>
         <View style={styles.testImageContainer}>
-           <Image source={require('./logo.png')}  style={styles.testImage} />
+           <Image source={require('./sandra.png')}  style={styles.testImage} />
         </View>
         <Text style={styles.userName}>{this.props.name}</Text>
-        <View style={styles.editContainer}>
-          <Text style={styles.editUser}>Edit Profile</Text>
-          <Image source={require('./pencil.png')}  style={styles.pencilImage} />
-        </View>
+        <TouchableHighlight onPress={() => {this.props.navigate.replace({id: 'editProfile'});}} underlayColor="transparent">
+          <View style={styles.editContainer}>
+            <Text style={styles.editUser}>Edit Profile</Text>
+            <Image source={require('./pencil.png')}  style={styles.pencilImage} />
+          </View>
+        </TouchableHighlight>
         <View style={styles.statusContainer}>
-          <View style={styles.statusTextContainer}>
-            <View style={styles.circularStatus}></View>
-            <Text style={styles.statusText}>Active</Text>
-          </View>
-          <View style={styles.switchContainer}>
-            <Switch value={this.setSwitchValue()}></Switch>
-          </View>
+          {this.showRelevantText()}
+          {this.showSwitchOrGif()}
         </View>
         <View style={styles.fiveButtonContainer}>
           <View style={styles.inviteContainer}>
@@ -183,5 +216,12 @@ const styles = StyleSheet.create({
     fontSize:20,
     fontWeight:"400",
     marginLeft:7,
+  },
+  circularInactiveStatus:{
+    backgroundColor: '#B4B7B6',
+    borderRadius: 50,
+    width:20,
+    height:20,
+    marginLeft:15,
   }
 });

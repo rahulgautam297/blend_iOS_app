@@ -16,6 +16,14 @@ export default class DrawerPanel extends Component {
 
   constructor(props) {
     super(props);
+    this.state = {image:''};
+  }
+  componentWillMount() {
+    if (this.props.image == '' || this.props.image == null) {
+      this.getImage()
+    } else if (this.props.image != ''){
+      this.setState({image: this.props.image});
+    }
   }
 
   setSwitchValue(){
@@ -60,16 +68,52 @@ export default class DrawerPanel extends Component {
       )
     }
   }
+
+  getImage(){
+    var RNFS = require('react-native-fs');
+    RNFS.readDir(RNFS.DocumentDirectoryPath)
+    .then((result) => {
+        var displayPic = null;
+        for (var i = 0; i < result.length; i++) {
+          if (result[i].name==='display_picture_path.txt'){
+            displayPic = result[i];
+            break;
+          }
+        }
+        return displayPic;
+      })
+      .then((displayPic) => {
+        var displayPic = RNFS.readFile(displayPic.path, 'utf8');
+        return displayPic;
+      })
+      .then((displayPic) => {
+        var image= JSON.parse(displayPic);
+        this.setState({image: image});
+      }).catch((err) => {
+        console.log(err.message, err.code);
+      });
+  }
+
+  renderImage(){
+    if (this.state.image == '' || this.state.image == null){
+      return null;
+    }else{
+      return(
+        <View style={styles.testImageContainer}>
+           <Image source={{uri: this.state.image}}  style={styles.testImage} />
+        </View>
+      )
+    }
+  }
+
   render() {
     return (
       <View style={styles.container}>
         <View style={styles.paneRoof}>
         </View>
-        <View style={styles.testImageContainer}>
-           <Image source={require('./sandra.png')}  style={styles.testImage} />
-        </View>
+        { this.renderImage() }
         <Text style={styles.userName}>{this.props.name}</Text>
-        <TouchableHighlight onPress={() => {this.props.navigate.replace({id: 'editProfile'});}} underlayColor="transparent">
+        <TouchableHighlight onPress={() => {this.props.navigate.replace({id: 'editProfile', image:this.state.image});}} underlayColor="transparent">
           <View style={styles.editContainer}>
             <Text style={styles.editUser}>Edit Profile</Text>
             <Image source={require('./pencil.png')}  style={styles.pencilImage} />

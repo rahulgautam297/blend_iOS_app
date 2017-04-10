@@ -14,6 +14,7 @@ import {
   ActivityIndicator,
   CameraScroll,
 } from 'react-native';
+import Camera from 'react-native-camera';
 export default class SignupCamera extends Component {
 
   constructor(props) {
@@ -33,7 +34,8 @@ export default class SignupCamera extends Component {
     }
   }
   componentWillMount() {
-      this.getToken().then((result)=> this.setState({token:result}));
+      if (this.props.token ===null || this.props.token ==='')
+          this.getToken().then((result)=> this.setState({token:result}));
   }
   takePicture() {
     this.camera.capture()
@@ -60,16 +62,26 @@ export default class SignupCamera extends Component {
         type={Camera.constants.Type.front}
         aspect={Camera.constants.Aspect.fill}
         mirrorImage={true}>
+        <TouchableHighlight style={styles.crossButtonTouch} onPress={() =>{this.props.navigator.replace({id: 'initial'}); }}>
+          <Image source={require('./cross.png')}  style={styles.crossButton} />
+        </TouchableHighlight>
         </Camera>
     )
   }
 
-  async storeStatus() {
+  async storeStatusandSetSelfieBoolean() {
     try {
-      await AsyncStorage.multiSet([['status', '1']]);
+      await AsyncStorage.multiSet([['status', '1'],['selfieTime', "0"]]);
     } catch (error) {
       console.log("uh oh no!!!");
     }
+  }
+
+  storeImage(){
+    var RNFS = require('react-native-fs');
+    var path = RNFS.DocumentDirectoryPath + "/display_picture_path.txt";
+    RNFS.writeFile(path, JSON.stringify(this.state.image), 'utf8');
+    console.log(path);
   }
   renderImageOrCamera(){
     if (this.state.image==='') {
@@ -101,12 +113,11 @@ export default class SignupCamera extends Component {
     })
     .then((response) => response.json())
       .then((responseJson) => {
-        console.log(responseJson);
-         this.setState({showGif:false});
+        this.setState({showGif:false});
         if (responseJson.code===0){
           this.setState({error: responseJson.msg, showError:true, twoButtons:false,image:''});
         }else if(responseJson.code===1){
-          this.storeStatus().then(() => {this.props.navigator.replace({id: 'contactList'});})
+          this.storeStatusandSetSelfieBoolean().then(() => this.storeImage()).then(() => {this.props.navigator.replace({id: 'contactList',image:this.state.image});})
         }
       })
       .catch((error) => {
@@ -179,6 +190,7 @@ const styles = StyleSheet.create({
     flex:0.1875,
     alignItems: 'center',
     justifyContent:'center',
+    backgroundColor: "#ffffff",
   },
   twoButtonsView:{
     flex:0.1875,
@@ -234,5 +246,16 @@ const styles = StyleSheet.create({
     color: '#FF4500',
     fontSize: 13,
     textAlign:'center',
-  }
+  },
+  crossButton: {
+    width:25,
+    height:25,
+    marginTop:30,
+    marginLeft:15
+  },
+  crossButtonTouch:{
+    width:50,
+    height:50,
+    alignSelf:'flex-start'
+  },
 });

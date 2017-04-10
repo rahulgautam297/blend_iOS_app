@@ -10,7 +10,8 @@ import {
   TouchableHighlight,
   Image,
   AsyncStorage,
-  Dimensions } from 'react-native';
+  Dimensions,
+  ActivityIndicator} from 'react-native';
 
 export default class OtpScreen extends Component {
   constructor(props) {
@@ -37,8 +38,9 @@ export default class OtpScreen extends Component {
           if (responseJson.hasOwnProperty("msg"))
             this.setState({otpError: responseJson.msg});
         }else if(responseJson.code===1){
-          if (responseJson.hasOwnProperty("token"))
+          if (responseJson.hasOwnProperty("token")){
             this.storeVariables(responseJson.token).then(() => this.props.navigator.replace({id: 'signupCamera', token:responseJson.token }))
+          }
         }
       })
       .catch((error) => {
@@ -47,7 +49,7 @@ export default class OtpScreen extends Component {
   }
   async storeVariables(token) {
     try {
-      await AsyncStorage.multiSet([['name', this.props.name], ['mobile', this.props.mobile], ['email', this.props.email], ['token', token]]);
+      await AsyncStorage.multiSet([['name', this.props.name], ['mobile', this.props.mobile], ['email', this.props.email], ['token', token], ['selfieTime', "1"]]);
     } catch (error) {
       console.log("uh oh no!!!");
     }
@@ -65,17 +67,19 @@ export default class OtpScreen extends Component {
   renderGifOrButton(){
     if(this.state.showGif == false){
       return(
-        <TouchableHighlight style={styles.uploadHighlight} onPress={(showGif) => {this.setState({showGif:true}); this.sendActivationRequest();}} underlayColor="#ffffff">
-        <Text style={styles.forSignUpText}>
-        Sign Up
-          <Image source={require('./button.png')} style={styles.imageButton}/>
-        </Text>
+        <TouchableHighlight onPress={(showGif) => {this.setState({showGif:true}); this.sendActivationRequest();}} underlayColor="transparent">
+          <View style={styles.uploadHighlight}>
+            <Text style={styles.forSignUpText}>
+              Sign Up
+            </Text>
+            <Image source={require('./button.png')} style={styles.imageButton}/>
+          </View>
         </TouchableHighlight>
       )
     }else if(this.state.showGif == true){
       return (
         <TouchableHighlight style={styles.uploadHighlight} underlayColor="#ffffff">
-          <Image source={require('./default.gif')} style={styles.imageButton2} />
+          <ActivityIndicator />
         </TouchableHighlight>
         )
     }
@@ -95,6 +99,8 @@ export default class OtpScreen extends Component {
           style={styles.otpInputStyle}
           onChangeText={(otp) => this.setState({otp})}
           value={this.state.otp}
+          autoFocus={true}
+          maxLength={4}
           />
         </View>
         {this.renderGifOrButton()}
@@ -124,8 +130,9 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 50,
     marginTop: 40,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row'
   },
    underlineInput: {
      borderBottomColor: '#ddd',
@@ -138,12 +145,6 @@ const styles = StyleSheet.create({
     color: "#d3d3d3"
   },
   imageButton: {
-    width:30,
-    height:30,
-    marginTop:13,
-    marginLeft:8,
-  },
-  imageButton2: {
     width:30,
     height:30,
   },

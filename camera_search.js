@@ -61,7 +61,7 @@ export default class CameraSearch extends Component {
         if (responseJson.code===0){
           if (responseJson.hasOwnProperty("msg"))
             this.setState({error: responseJson.msg, showError:true, image:''});
-        }else if(responseJson.code===1){
+        } else if(responseJson.code===1){
             this.props.navigator.replace({id: 'contactList', gotResponse:true});
         }
       })

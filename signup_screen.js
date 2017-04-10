@@ -11,6 +11,7 @@ import {
   TouchableHighlight,
   Image,
   AsyncStorage,
+  ActivityIndicator
 } from 'react-native';
 import Camera from 'react-native-camera';
 export default class Signup extends Component {
@@ -22,7 +23,6 @@ export default class Signup extends Component {
 
   sendSignUpData(){
     let body = new FormData();
-    body.append('image', {uri: this.props.image, name: 'photo.jpg',type: 'image/jpg'});
     body.append('name', this.state.name);
     body.append('mobile', this.state.mobile);
     body.append('email', this.state.email);
@@ -62,7 +62,7 @@ export default class Signup extends Component {
     }else{
       return (
         <TouchableHighlight style={styles.uploadHighlight} underlayColor="#ffffff">
-          <Image source={require('./default.gif')} />
+          <ActivityIndicator />
         </TouchableHighlight>
         )
     }
@@ -81,6 +81,7 @@ export default class Signup extends Component {
               style={styles.inputForName}
               onChangeText={(name) => this.setState({name})}
               value={this.state.name}
+              autoFocus={true}
               />
           </View>
           <View style={styles.underlineInput}>
@@ -109,6 +110,7 @@ export default class Signup extends Component {
               onChangeText={(mobile) => this.setState({mobile})}
               value={this.state.mobile}
               keyboardType= "phone-pad"
+              maxLength={10}
               />
           </View>
         {this.renderGifOrButton()}

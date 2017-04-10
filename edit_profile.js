@@ -5,7 +5,6 @@ import {
   Navigator,
   StyleSheet,
   TextInput,
-  Button,
   TouchableHighlight,
   Image,
   Dimensions,
@@ -21,14 +20,41 @@ export default class EditProfile extends Component {
 
   constructor(props) {
     super(props);
-    this.state = {name:'', email:'', mobile:'', nameError:'', emailError:'', designation:'', designationError:'', uploadInactive:true, image:''};
+    this.state = {token:'', name:'', email:'', mobile:'', nameError:'', emailError:'', designation:'', designationError:'', uploadInactive:true, image:''};
   }
 
   pickImage() {
     ImagePickerIOS.openSelectDialog({}, imageUri => {
-      this.setState({ image: imageUri });
-    }, error => console.error(error));
+      this.setState({image: imageUri});
+      this.uploadImage();
+    }, error => console.log(error));
   }
+
+  uploadImage(){
+    let body = new FormData();
+    body.append('token', this.state.token);
+    body.append('image', {uri: this.state.image, name: 'photo.jpg',type: 'image/jpg'});
+    return fetch('http://production.cp8pxbibac.us-west-2.elasticbeanstalk.com/api/v1/set_display_picture', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: body
+    })
+    .then((response) => response.json())
+      .then((responseJson) => {
+        console.log(responseJson);
+        if (responseJson.code===0){
+        }else if(responseJson.code===1){
+          console.log("Hell yeah bitch!!");
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+    });
+  }
+
   componentWillMount() {
     this.getVariable("token", "name", "email", "mobile", "designation").then((result)=> this.setState(
       {token:result[0][1], name:result[1][1], email:result[2][1], mobile:result[3][1], designation:result[4][1]}))
@@ -66,13 +92,30 @@ export default class EditProfile extends Component {
 
   async storeVariables(token) {
     try {
-      await AsyncStorage.multiSet([['name', this.state.name], ['mobile', this.state.mobile], ['email', this.state.email], ['designation', this.state.designation]]);
+      await AsyncStorage.multiSet([['name', this.state.name], ['mobile', this.state.mobile], ['email', this.state.email],
+       ['designation', this.state.designation]]);
     } catch (error) {
       console.log("uh oh no!!!");
     }
   }
   saveAndUploadData(){
     this.storeVariables();
+  }
+
+  componentWillMount() {
+      this.setState({image: this.props.image});
+  }
+
+  renderImage(){
+    if (this.state.image == '' || this.state.image == null){
+      return null
+    }else {
+      return(
+        <View style={styles.testImageContainer}>
+           <Image source={{uri: this.state.image}}  style={styles.testImage} />
+        </View>
+      )
+    }
   }
 
   render() {
@@ -86,11 +129,7 @@ export default class EditProfile extends Component {
           <Image source={require('./cross.png')}  style={styles.crossButton} />
         </TouchableHighlight>
         <KeyboardAvoidingView behavior = "position">
-          <TouchableHighlight  onPress={() =>{this.pickImage() }} underlayColor="transparent">
-            <View style={styles.testImageContainer}>
-               <Image source={require('./sandra.png')}  style={styles.testImage} />
-            </View>
-          </TouchableHighlight>
+            {this.renderImage()}
           <View style={styles.nameContainer}>
             <Text style={styles.nameText}>
               Full name &nbsp;
@@ -101,7 +140,7 @@ export default class EditProfile extends Component {
             <TextInput
              style={styles.nameInput}
              value={this.state.name}
-             onChangeText={(name) => {this.setState({name:name,uploadInactive:false});}}
+             onChangeText={(name) => {this.setState({name:name, uploadInactive:false});}}
              keyboardAppearance={"dark"}/>
           </View>
           <View style={styles.nameContainer}>
@@ -148,7 +187,7 @@ export default class EditProfile extends Component {
           </View>
           </KeyboardAvoidingView>
           <TouchableHighlight style={styles.saveButtonTouch} disabled={this.state.uploadInactive}  onPress={() =>{this.saveAndUploadData();}} underlayColor="transparent">
-            <Image source={require('./accept.png')}  style={styles.saveImage} />
+            <Image source={require('./accept.png')} style={styles.saveImage} />
           </TouchableHighlight>
       </View>
     )

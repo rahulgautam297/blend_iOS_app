@@ -10,7 +10,8 @@ import {
   Button,
   TouchableHighlight,
   Image,
-  AsyncStorage
+  AsyncStorage,
+  ActivityIndicator
 } from 'react-native';
 export default class Signin extends Component {
   constructor(props) {
@@ -37,6 +38,7 @@ export default class Signin extends Component {
             this.setState({mobileError: responseJson.msg});
         }else if(responseJson.code===1){
           this.setState({showGif: false, mobileButton: false, responseMobile:this.state.mobile,mobileError: ""});
+          console.log(this.state.disabled);
         }
       })
       .catch((error) => {
@@ -63,7 +65,7 @@ export default class Signin extends Component {
           if (responseJson.hasOwnProperty("msg"))
             this.setState({otpError: responseJson.msg});
         }else if(responseJson.code===1){
-          this.storeVariables(responseJson).then(()=> this.props.navigator.replace({id: 'contactList'}))
+          this.storeVariables(responseJson).then(() => this.props.navigator.replace({id: 'contactList'}))
         }
       })
       .catch((error) => {
@@ -72,7 +74,9 @@ export default class Signin extends Component {
   }
   async storeVariables(responseJson) {
     try {
-      await AsyncStorage.multiSet([['name', responseJson.user.name], ['mobile', responseJson.user.mobile], ['email', responseJson.user.email], ['token', responseJson.token], ['status', '1']]);
+      await AsyncStorage.multiSet([['name', responseJson.user.name],
+      ['mobile', responseJson.user.mobile], ['email', responseJson.user.email],
+      ['token', responseJson.token], ['status', '1'], ['selfieTime', "0"]]);
     } catch (error) {
       console.log("uh oh no!!!");
     }
@@ -87,25 +91,27 @@ export default class Signin extends Component {
     }else if(this.state.showGif == true && this.state.mobileButton == true){
       return (
         <TouchableHighlight style={styles.uploadHighlight} underlayColor="#ffffff">
-          <Image source={require('./default.gif')} style={styles.imageButton} />
+          <ActivityIndicator />
         </TouchableHighlight>
-        )
+      )
     }
   }
   renderOtpButton(){
     if(this.state.showGif == false && this.state.mobileButton == false){
       return(
-        <TouchableHighlight style={styles.uploadHighlightForOTP} onPress={(showGif) => {this.setState({showGif:true}); this.sendOtp();}} underlayColor="#ffffff">
-        <Text style={styles.forSignInText}>
-        Sign In &nbsp;
+        <TouchableHighlight onPress={(showGif) => {this.setState({showGif:true}); this.sendOtp();}} underlayColor="transparent">
+        <View style={styles.uploadHighlightForOTP}>
+          <Text style={styles.forSignInText}>
+          Sign In &nbsp;
+          </Text>
           <Image source={require('./button.png')} style={styles.imageButton2}/>
-        </Text>
+        </View>
         </TouchableHighlight>
       )
     }else if(this.state.showGif == true && this.state.mobileButton == false){
       return (
         <TouchableHighlight style={styles.uploadHighlight} underlayColor="#ffffff">
-          <Image source={require('./default.gif')} />
+          <ActivityIndicator />
         </TouchableHighlight>
         )
     }
@@ -115,7 +121,7 @@ export default class Signin extends Component {
       return(
       <View style={styles.underlineInput}>
         <Text style={styles.ForOTPText}>
-          Enter OTP
+          Enter OTP &nbsp;
           <Text style = {styles.errorText}>
             {this.state.otpError}
           </Text>
@@ -125,6 +131,8 @@ export default class Signin extends Component {
         onChangeText={(otp) => this.setState({otp})}
         value={this.state.otp}
         keyboardType= "phone-pad"
+        autoFocus={true}
+        maxLength={4}
         />
       </View>
     )
@@ -145,6 +153,8 @@ export default class Signin extends Component {
           onChangeText={(mobile) => this.setState({mobile})}
           value={this.state.mobile}
           keyboardType= "phone-pad"
+          autoFocus={true}
+          maxLength={10}
           onFocus={() => this.setState({mobileError:''})}
           />
         </View>
@@ -194,6 +204,9 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 50,
     marginTop: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row'
   },
    underlineInput: {
      borderBottomColor: '#ddd',
@@ -217,7 +230,6 @@ const styles = StyleSheet.create({
   imageButton2: {
     width:25,
     height:25,
-    marginTop:9,
   },
   forSignInText:{
     color: '#FF4500',

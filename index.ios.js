@@ -21,13 +21,17 @@
  class Lucido extends Component {
    constructor(props) {
      super(props);
-     this.state = {hasToken: false, isLoaded:false, token:''};
+     this.state = {hasToken: false, isLoaded:false, token:'', selfieTime:false};
    }
    async checkLoggedIn() {
      try {
-       const value = await AsyncStorage.getItem('token');
-       if (value !== null){
-         this.setState({token:value});
+       const value = await AsyncStorage.multiGet(['token','selfieTime']);
+       if (value[0][1] !== null){
+          if (value[1][1] === '1')
+            this.setState({token:value, selfieTime:true});
+          else if (value[1][1] === '0'){
+            this.setState({token:value, selfieTime:false});
+          }
          return true;
        }else {
          return false;
@@ -49,18 +53,29 @@
    takeMeTo(){
      var token = this.state.hasToken;
      if(token === true){
-       return(
-         <Navigator
-         initialRoute = {{ id: 'contactList', mobile: "", name:"", email:"", image:"", gotResponse:false}}
-         renderScene={(route, navigator) =>
-          this.renderScene(route, navigator)
-           }
-         />
-       )
+       if (this.state.selfieTime === true){
+        return(
+           <Navigator
+           initialRoute = {{ id: 'signupCamera', mobile: "", name:"", email:"", image:"", token: this.state.token}}
+           renderScene={(route, navigator) =>
+            this.renderScene(route, navigator)
+             }
+           />
+         )
+       }else if (this.state.selfieTime === false ){
+        return(
+           <Navigator
+           initialRoute = {{ id: 'contactList', mobile: "", name:"", email:"", image:""}}
+           renderScene={(route, navigator) =>
+            this.renderScene(route, navigator)
+             }
+           />
+         )
+       }
     }else if(token === false){
        return(
          <Navigator
-         initialRoute = {{ id: 'initial', mobile: "", name:"", email:"", image:"", gotResponse:false}}
+         initialRoute = {{ id: 'initial', mobile: "", name:"", email:"", image:""}}
          renderScene={(route, navigator) =>
           this.renderScene(route, navigator)
            }
@@ -68,6 +83,7 @@
        )
      }
    }
+
    loadingInfo(){
      if (!this.state.isLoaded) {
        return (<ActivityIndicator />)
@@ -84,7 +100,7 @@
      var routeId = route.id;
      if (routeId === 'signup') {
        return (
-         <Signup navigator={navigator} image={route.image}/>
+         <Signup navigator={navigator}/>
        );
      }else if (routeId === 'otpScreen') {
        return (
@@ -94,7 +110,7 @@
     }else if (routeId === 'contactList') {
       return (
         <ContactList
-        navigator={navigator} gotResponse={route.gotResponse} mobile={route.mobile} email={route.email} name={route.name}/>
+        navigator={navigator} image={route.image}/>
       );
     }else if (routeId === 'initial') {
       return (
@@ -123,7 +139,7 @@
       );
     }else if (routeId === 'editProfile') {
       return (
-        <EditProfile navigator={navigator} />
+        <EditProfile navigator={navigator} image={route.image}/>
       );
     }
   }

@@ -14,7 +14,6 @@ import {
   ActivityIndicator,
   ListView,
   RefreshControl,} from 'react-native';
-import Camera from 'react-native-camera';
 import Drawer from 'react-native-drawer';
 import DrawerPanel from './drawer_panel.js';
 export default class ContactList extends Component {
@@ -94,7 +93,9 @@ export default class ContactList extends Component {
       var path = RNFS.DocumentDirectoryPath + '/contacts.txt';
       return RNFS.unlink(path)
         .then(() => {
-          console.log('FILE DELETED');
+          var RNFS = require('react-native-fs');
+          var path = RNFS.DocumentDirectoryPath + 'display_picture_path.txt';
+          return RNFS.unlink(path)
         })
         .catch((err) => {
           console.log(err.message);
@@ -425,7 +426,7 @@ export default class ContactList extends Component {
       <Drawer
         ref={(ref) => this.drawer = ref}
         type="overlay"
-        content={<DrawerPanel name = {this.state.name}  status = {this.state.status}
+        content={<DrawerPanel name = {this.state.name}  status = {this.state.status} image = {this.props.image}
         wipe={this.clearEverything.bind(this)} inTransition={this.state.inTransition}
          changeStatus={this.changeActiveStatus.bind(this)} navigate={this.props.navigator}></DrawerPanel>}
         tapToClose={true}

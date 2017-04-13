@@ -78,7 +78,7 @@ export default class CameraSearch extends Component {
               }}
               style={styles.preview}
               captureTarget = {Camera.constants.CaptureTarget.disk}
-              captureQuality={Camera.constants.CaptureQuality.high}
+              captureQuality={Camera.constants.CaptureQuality.medium}
               aspect={Camera.constants.Aspect.fill}
               flashMode={Camera.constants.TorchMode.auto}>
               <TouchableHighlight style={styles.crossButtonTouch} onPress={() =>{this.props.navigator.replace({id: 'contactList'}); }}>

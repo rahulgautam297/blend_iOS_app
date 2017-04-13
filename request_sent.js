@@ -7,43 +7,63 @@ import {
   View,
   TouchableHighlight,
   Image,
+  ActivityIndicator,
 } from 'react-native';
+import RNFetchBlob from 'react-native-fetch-blob'
 export default class RequestSent extends Component {
 
   constructor(props) {
     super(props);
-    this.state = { image:'', msg:'' };
+    this.state = { image:''};
   }
 
   componentWillMount() {
+    this.receivePhoto();
   }
 
   receivePhoto(){
-    return fetch(this.props.image, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
+    let dirs = RNFetchBlob.fs.dirs;
+    RNFetchBlob
+    .config({
+      fileCache : true,
+      appendExt : 'jpg'
     })
-    .then((response) => response.json())
-      .then((responseJson) => {
-
-      })
-      .catch((error) => {
-        console.error(error);
-    });
+    .fetch('GET', this.props.image, {
+    })
+    .then((res) => {
+      this.setState({image: res.path()});
+      // remove file
+    })
   }
 
+  setImage(){
+    if (this.state.image === ''){
+      return(
+        <View style={styles.activityContainer}>
+          <ActivityIndicator />
+        </View>
+      )
+    }else{
+      return(
+        <View style={styles.imageContainer}>
+          <Image source= {{uri: this.state.image}} style={styles.imagePreview} />
+        </View>
+      )
+    }
+  }
+
+  removeImageThenLeave(){
+    RNFetchBlob.fs.unlink(this.state.image).then(() => {
+      this.props.navigator.replace({ id: 'contactList'});
+    })
+  }
 
   render() {
     return (
       <View style={styles.container}>
-        <View style={styles.imageContainer}>
-          <Image source={require('./sandra.png')} style={styles.imagePreview} />
-        </View>
+        {this.setImage()}
         <Text style={styles.sentText}>Reqeust Sent!</Text>
-        <TouchableHighlight style={styles.saveButtonTouch}  onPress={() =>{this.props.navigator.replace({ id: 'contactList'});}} underlayColor="transparent">
+        <TouchableHighlight style={styles.saveButtonTouch}  onPress={() =>{this.removeImageThenLeave();}} underlayColor="transparent">
           <Image source={require('./accept.png')} style={styles.saveImage} />
         </TouchableHighlight>
       </View>
@@ -60,6 +80,13 @@ const styles = StyleSheet.create({
   imageContainer: {
     marginTop: 50,
     borderRadius:150,
+    overflow:'hidden',
+  },
+  activityContainer:{
+    height: 300,
+    width: 300,
+    alignItems:"center",
+    justifyContent:"center",
   },
   imagePreview:{
     height: 300,

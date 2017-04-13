@@ -38,11 +38,13 @@ export default class SignupCamera extends Component {
       if (this.props.token ===null || this.props.token ==='')
           this.getToken().then((result)=> this.setState({token:result}));
   }
+
   takePicture() {
     this.camera.capture()
       .then((data) => this.setState({image: data.path, twoButtons:true}))
       .catch(err => console.error(err));
   }
+
   renderImage() {
     return (
         <Image
@@ -51,6 +53,7 @@ export default class SignupCamera extends Component {
         />
     );
   }
+  
   renderCamera(){
     return(
         <Camera

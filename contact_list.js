@@ -118,6 +118,7 @@ export default class ContactList extends Component {
     })
     .then((response) => response.json())
       .then((responseJson) => {
+        console.log(responseJson);
         this.setState({contacts:responseJson.connections, requests:responseJson.requests, gotData:true})
         var hash={};
         hash['contactsList'] = responseJson.connections;

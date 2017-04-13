@@ -11,7 +11,7 @@ import {
   Linking,
 } from 'react-native';
 export default class Card extends Component {
-  
+
   render() {
     return (
       <View style={styles.container}>

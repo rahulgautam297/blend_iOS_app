@@ -98,7 +98,7 @@ export default class DrawerPanel extends Component {
     }else{
       return(
         <View style={styles.testImageContainer}>
-           <Image source={{uri: this.state.image}}  style={styles.testImage} />
+           <Image source = {{uri: this.state.image}}  style={styles.testImage} />
         </View>
       )
     }

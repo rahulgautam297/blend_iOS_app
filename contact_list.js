@@ -92,14 +92,14 @@ export default class ContactList extends Component {
       var RNFS = require('react-native-fs');
       var path = RNFS.DocumentDirectoryPath + '/contacts.txt';
       return RNFS.unlink(path)
-        .then(() => {
-          var RNFS = require('react-native-fs');
-          var path = RNFS.DocumentDirectoryPath + 'display_picture_path.txt';
-          return RNFS.unlink(path)
-        })
-        .catch((err) => {
-          console.log(err.message);
-        });
+      .then(() => {
+        var RNFS = require('react-native-fs');
+        var path = RNFS.DocumentDirectoryPath + '/display_picture.jpg';
+        return RNFS.unlink(path)
+      })
+      .catch((err) => {
+        console.log(err.message);
+      });
     })
     .then(() => {this.props.navigator.replace({id: 'initial'});})
   }
@@ -180,23 +180,6 @@ export default class ContactList extends Component {
     )
   }
 
-  renderContacts(){
-     const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
-    return (
-      <ListView
-        keyboardShouldPersistTaps={'always'}
-        enableEmptySections={true}
-        dataSource={ds.cloneWithRows(this.state.contacts)}
-        renderRow={(rowData) => (this.renderContact(rowData))}
-        refreshControl={
-        <RefreshControl
-          refreshing={this.state.refreshing}
-          onRefresh={this.getUnSyncedContactsRequest.bind(this)}
-          />
-        }
-      />
-    );
-  }
 
   acceptDeclineOrBlock(c_id,select){
     var that = this;
@@ -288,31 +271,88 @@ export default class ContactList extends Component {
 
   renderRequests(){
      const dsa = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
-    return (
-      <ListView
-        enableEmptySections={true}
-        keyboardShouldPersistTaps={'always'}
-        dataSource={dsa.cloneWithRows(this.state.requests)}
-        renderRow = {(rowData) => (
-                                  <View style={styles.listRowContainer}>
-                                    <Text style={styles.listRow}> {rowData.name} </Text>
-                                    <Text style={styles.designation}>Creative Writer</Text>
-                                    <View style={styles.buttonRowContainer}>
-                                    {this.renderAcceptOrGif(this.state.acceptAI,1,rowData.c_id)}
-                                    {this.renderRejectOrGif(this.state.rejectAI,0,rowData.c_id)}
-                                    {this.renderReportOrGif(this.state.reportAI,rowData.c_id)}
+     if (this.state.requests.length==0){
+       return (
+         <ListView
+           enableEmptySections={true}
+           keyboardShouldPersistTaps={'always'}
+           dataSource={dsa.cloneWithRows([{name:"Pull down to sync."}])}
+           renderRow = {(rowData) => (
+                                       <Text> {rowData.name} </Text>
+                                   )}
+           refreshControl={
+           <RefreshControl
+             refreshing={this.state.refreshing}
+             onRefresh={this.getUnSyncedContactsRequest.bind(this)}
+             />
+           }
+         />
+       );
+     }
+     else if (this.state.requests.length > 0){
+      return (
+        <ListView
+          enableEmptySections={true}
+          keyboardShouldPersistTaps={'always'}
+          dataSource={dsa.cloneWithRows(this.state.requests)}
+          renderRow = {(rowData) => (
+                                    <View style={styles.listRowContainer}>
+                                      <Text style={styles.listRow}> {rowData.name} </Text>
+                                      <Text style={styles.designation}>Creative Writer</Text>
+                                      <View style={styles.buttonRowContainer}>
+                                      {this.renderAcceptOrGif(this.state.acceptAI,1,rowData.c_id)}
+                                      {this.renderRejectOrGif(this.state.rejectAI,0,rowData.c_id)}
+                                      {this.renderReportOrGif(this.state.reportAI,rowData.c_id)}
+                                      </View>
                                     </View>
-                                  </View>
-                                )}
-        renderSeparator={(sectionId, rowId) => <View key={rowId} style={styles.separator} />}
-        refreshControl={
-        <RefreshControl
-          refreshing={this.state.refreshing}
-          onRefresh={this.getUnSyncedContactsRequest.bind(this)}
-          />
-        }
-      />
-    );
+                                  )}
+          refreshControl={
+          <RefreshControl
+            refreshing={this.state.refreshing}
+            onRefresh={this.getUnSyncedContactsRequest.bind(this)}
+            />
+          }
+        />
+      );
+    }
+  }
+
+
+  renderContacts(){
+     const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
+     if (this.state.contacts.length==0){
+       return (
+         <ListView
+           enableEmptySections={true}
+           keyboardShouldPersistTaps={'always'}
+           dataSource={ds.cloneWithRows([{name:"Pull down to sync."}])}
+           renderRow = {(rowData) => (
+                                    <Text> {rowData.name} </Text>
+                                   )}
+           refreshControl={
+           <RefreshControl
+             refreshing={this.state.refreshing}
+             onRefresh={this.getUnSyncedContactsRequest.bind(this)}
+             />
+           }
+         />
+       );
+     }else if (this.state.contacts.length > 0){
+      return (
+        <ListView
+          keyboardShouldPersistTaps={'always'}
+          enableEmptySections={true}
+          dataSource={ds.cloneWithRows(this.state.contacts)}
+          renderRow={(rowData) => (this.renderContact(rowData))}
+          refreshControl={
+          <RefreshControl
+            refreshing={this.state.refreshing}
+            onRefresh={this.getUnSyncedContactsRequest.bind(this)}
+            />
+          }
+        />
+      );
+    }
   }
 
   showContacts(){
@@ -426,7 +466,7 @@ export default class ContactList extends Component {
       <Drawer
         ref={(ref) => this.drawer = ref}
         type="overlay"
-        content={<DrawerPanel name = {this.state.name}  status = {this.state.status} image = {this.props.image}
+        content={<DrawerPanel name = {this.state.name}  status = {this.state.status} image = {this.props.image} previousScreen={this.props.previousScreen}
         wipe={this.clearEverything.bind(this)} inTransition={this.state.inTransition}
          changeStatus={this.changeActiveStatus.bind(this)} navigate={this.props.navigator}></DrawerPanel>}
         tapToClose={true}

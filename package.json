@@ -7,10 +7,11 @@
     "test": "jest"
   },
   "dependencies": {
-    "react": "^16.0.0-alpha.6",
-    "react-native": "^0.43.0",
+    "react": "16.0.0-alpha.6",
+    "react-native": "0.43.0",
     "react-native-camera": "git+https://github.com/lwansbrough/react-native-camera.git",
     "react-native-drawer": "^2.3.0",
+    "react-native-fetch-blob": "^0.10.4",
     "react-native-fs": "^2.1.0-rc.1",
     "react-native-swipeout": "^2.0.12"
   },

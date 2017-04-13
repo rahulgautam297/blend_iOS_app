@@ -7,14 +7,16 @@ import {
   View,
   TouchableHighlight,
   Image,
-  Dimensions
+  Dimensions,
+  Linking,
 } from 'react-native';
 export default class Card extends Component {
+  
   render() {
     return (
       <View style={styles.container}>
         <Image source={require('./card_background.png')}  style={styles.backgroundImage}>
-          <TouchableHighlight style={styles.crossButtonTouch} onPress={() =>{this.props.navigator.replace({id: 'contactList'}); underlayColor="transparent"}}>
+          <TouchableHighlight style={styles.crossButtonTouch} onPress={() =>{this.props.navigator.replace({id: 'contactList'});}} underlayColor="transparent">
             <Image source={require('./cross.png')}  style={styles.crossButton} />
           </TouchableHighlight>
           <View style={styles.testImageContainer}>
@@ -27,12 +29,16 @@ export default class Card extends Component {
             <Text style={styles.professionText}>
               Creative Writer
             </Text>
-            <Text style={styles.mobileText}>
-              {this.props.mobile}
-            </Text>
-            <Text style={styles.emailText}>
-              {this.props.email}
-            </Text>
+            <TouchableHighlight  underlayColor="transparent" onPress={() => Linking.openURL('tel:'+ this.props.mobile)}>
+              <Text style={styles.mobileText}>
+                {this.props.mobile}
+              </Text>
+            </TouchableHighlight>
+            <TouchableHighlight  underlayColor="transparent" onPress={() => Linking.openURL('mailto:'+ this.props.email)}>
+              <Text style={styles.emailText}>
+                {this.props.email}
+              </Text>
+            </TouchableHighlight>
           </View>
         </Image>
       </View>
@@ -102,13 +108,13 @@ const styles = StyleSheet.create({
     color:"#613E90",
   },
   mobileText:{
-    fontSize:18,
+    fontSize:20,
     fontWeight:"300",
     marginTop:7,
   },
   emailText:{
-    fontSize:18,
+    fontSize:20,
     fontWeight:"300",
-    marginTop:4,
+    marginTop:10,
   }
 });

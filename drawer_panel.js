@@ -12,6 +12,7 @@ import {
   ListView,
   Switch,
   ActivityIndicator} from 'react-native';
+  import RNFetchBlob from 'react-native-fetch-blob'
 export default class DrawerPanel extends Component {
 
   constructor(props) {
@@ -22,7 +23,11 @@ export default class DrawerPanel extends Component {
     if (this.props.image == '' || this.props.image == null) {
       this.getImage()
     } else if (this.props.image != ''){
-      this.setState({image: this.props.image});
+      if (this.props.previousScreen==="signIn")
+        this.receiveImage()
+      else{
+        this.setState({image: this.props.image});
+      }
     }
   }
 
@@ -69,29 +74,22 @@ export default class DrawerPanel extends Component {
     }
   }
 
+  receiveImage(){
+    let dirs = RNFetchBlob.fs.dirs
+    RNFetchBlob
+    .config({
+      path : dirs.DocumentDir + '/display_picture.jpg'
+    })
+    .fetch('GET', this.props.image, {
+    })
+    .then((res) => {
+      this.setState({image: res.path()});
+    })
+  }
+
   getImage(){
-    var RNFS = require('react-native-fs');
-    RNFS.readDir(RNFS.DocumentDirectoryPath)
-    .then((result) => {
-        var displayPic = null;
-        for (var i = 0; i < result.length; i++) {
-          if (result[i].name==='display_picture_path.txt'){
-            displayPic = result[i];
-            break;
-          }
-        }
-        return displayPic;
-      })
-      .then((displayPic) => {
-        var displayPic = RNFS.readFile(displayPic.path, 'utf8');
-        return displayPic;
-      })
-      .then((displayPic) => {
-        var image= JSON.parse(displayPic);
-        this.setState({image: image});
-      }).catch((err) => {
-        console.log(err.message, err.code);
-      });
+    let path = RNFetchBlob.fs.dirs.DocumentDir + '/display_picture.jpg'
+    this.setState({image: path});
   }
 
   renderImage(){

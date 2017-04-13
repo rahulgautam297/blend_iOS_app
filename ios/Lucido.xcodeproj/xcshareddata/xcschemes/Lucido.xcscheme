@@ -99,13 +99,6 @@
             ReferencedContainer = "container:Lucido.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <EnvironmentVariables>
-         <EnvironmentVariable
-            key = "&quot;OS_ACTIVITY_MODE&quot;"
-            value = "&quot;disable&quot;"
-            isEnabled = "YES">
-         </EnvironmentVariable>
-      </EnvironmentVariables>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>

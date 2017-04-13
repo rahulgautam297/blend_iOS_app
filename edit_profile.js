@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import {
+  AppRegistry,
   View,
   Text,
   Navigator,
@@ -15,12 +16,11 @@ import {
   AsyncStorage,
   ImagePickerIOS
   } from 'react-native';
-  import Camera from 'react-native-camera';
 export default class EditProfile extends Component {
 
   constructor(props) {
     super(props);
-    this.state = {token:'', name:'', email:'', mobile:'', nameError:'', emailError:'', designation:'', designationError:'', uploadInactive:true, image:''};
+    this.state = {token:'', name:'', email:'', mobile:'', nameError:'', emailError:'', designation:'', designationError:'', uploadInactive:true, image:'', showGif:false};
   }
 
   pickImage() {
@@ -55,9 +55,58 @@ export default class EditProfile extends Component {
     });
   }
 
+    updateRequest(){
+      this.setState({showGif: true});
+      let body = new FormData();
+      body.append('token', this.state.token);
+      body.append('name', this.state.name);
+      body.append('designation', this.state.designation);
+      body.append('email', this.state.email);
+      return fetch('http://production.cp8pxbibac.us-west-2.elasticbeanstalk.com/api/v1/update_account', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: body
+      })
+      .then((response) => response.json())
+        .then((responseJson) => {
+          if (responseJson.code===0){
+            this.setState({showGif:false});
+            if (responseJson.msg.hasOwnProperty("name"))
+              this.setState({nameError: responseJson.msg.name[0]});
+            if (responseJson.msg.hasOwnProperty("designation"))
+              this.setState({designationError: responseJson.msg.designation[0]});
+            if (responseJson.msg.hasOwnProperty("email"))
+              this.setState({emailError: responseJson.msg.email[0]});
+          }else if(responseJson.code===1){
+            this.storeVariables().then(() => { this.props.navigator.replace({id: 'contactList'}); });
+          }
+        })
+        .catch((error) => {
+          console.error(error);
+      });
+    }
+    renderGifOrButton(){
+      if(this.state.showGif == false){
+        return(
+          <TouchableHighlight style={styles.saveButtonTouch} disabled={this.state.uploadInactive}  onPress={() =>{this.updateRequest();}} underlayColor="transparent">
+            <Image source={require('./accept.png')} style={styles.saveImage} />
+          </TouchableHighlight>
+        )
+      }else if(this.state.showGif == true){
+        return (
+          <TouchableHighlight style={styles.saveButtonTouchGif} underlayColor="transparent">
+            <ActivityIndicator />
+          </TouchableHighlight>
+          )
+      }
+    }
+
   componentWillMount() {
     this.getVariable("token", "name", "email", "mobile", "designation").then((result)=> this.setState(
-      {token:result[0][1], name:result[1][1], email:result[2][1], mobile:result[3][1], designation:result[4][1]}))
+      {token:result[0][1], name:result[1][1], email:result[2][1], mobile:result[3][1], designation:result[4][1], image: this.props.image}))
   }
   async getVariable(item1, item2, item3, item4, item5) {
     try {
@@ -72,24 +121,6 @@ export default class EditProfile extends Component {
     }
   }
 
-  showSwitchOrGif(){
-    if (this.props.inTransition == false){
-      return(
-        <View style={styles.switchContainer}>
-          <Switch value={this.setSwitchValue()}
-          onValueChange={() => this.props.changeStatus()}>
-          </Switch>
-        </View>
-      )
-    }else if(this.props.inTransition == true){
-      return(
-        <View style={styles.switchContainer}>
-          <ActivityIndicator />
-        </View>
-      )
-    }
-  }
-
   async storeVariables(token) {
     try {
       await AsyncStorage.multiSet([['name', this.state.name], ['mobile', this.state.mobile], ['email', this.state.email],
@@ -98,14 +129,6 @@ export default class EditProfile extends Component {
       console.log("uh oh no!!!");
     }
   }
-  saveAndUploadData(){
-    this.storeVariables();
-  }
-
-  componentWillMount() {
-      this.setState({image: this.props.image});
-  }
-
   renderImage(){
     if (this.state.image == '' || this.state.image == null){
       return null
@@ -186,9 +209,7 @@ export default class EditProfile extends Component {
               />
           </View>
           </KeyboardAvoidingView>
-          <TouchableHighlight style={styles.saveButtonTouch} disabled={this.state.uploadInactive}  onPress={() =>{this.saveAndUploadData();}} underlayColor="transparent">
-            <Image source={require('./accept.png')} style={styles.saveImage} />
-          </TouchableHighlight>
+          {this.renderGifOrButton()}
       </View>
     )
   }
@@ -257,5 +278,14 @@ const styles = StyleSheet.create({
   saveButtonTouch:{
     alignSelf:'center',
     marginTop: 10,
+  },
+  saveButtonTouchGif:{
+    width:60,
+    height:60,
+    justifyContent:'center',
+    alignItems:'center',
+    marginTop: 15,
+    backgroundColor: "#1ABC9C",
+    borderRadius: 50,
   },
 });

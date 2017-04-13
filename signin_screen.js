@@ -65,18 +65,22 @@ export default class Signin extends Component {
           if (responseJson.hasOwnProperty("msg"))
             this.setState({otpError: responseJson.msg});
         }else if(responseJson.code===1){
-          this.storeVariables(responseJson).then(() => this.props.navigator.replace({id: 'contactList'}))
+          if (responseJson.user.search_status ==='Active')
+            this.storeVariables(responseJson,'1').then(() => this.props.navigator.replace({id: 'contactList', image:responseJson.image, previousScreen:"signIn"}))
+          else if (responseJson.user.search_status ==='Inactive'){
+            this.storeVariables(responseJson,'0').then(() => this.props.navigator.replace({id: 'contactList', image:responseJson.image, previousScreen:"signIn"}))
+          }
         }
       })
       .catch((error) => {
         console.error(error);
     });
   }
-  async storeVariables(responseJson) {
+  async storeVariables(responseJson, search_status) {
     try {
       await AsyncStorage.multiSet([['name', responseJson.user.name],
-      ['mobile', responseJson.user.mobile], ['email', responseJson.user.email],
-      ['token', responseJson.token], ['status', '1'], ['selfieTime', "0"]]);
+      ['mobile', responseJson.user.mobile], ['email', responseJson.user.email], ['designation', responseJson.user.designation],
+      ['token', responseJson.token], ['status', search_status], ['selfieTime', "0"]]);
     } catch (error) {
       console.log("uh oh no!!!");
     }

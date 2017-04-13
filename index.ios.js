@@ -16,13 +16,16 @@
  import InitialScreen from './initial_screen.js';
  import SignupCamera from './signup_camera.js';
  import CameraSearch from './camera_search.js';
- import EditProfile  from './edit_profile.js'
+ import EditProfile  from './edit_profile.js';
+ import RequestSent  from './request_sent.js';
  import Card from './card.js';
  class Lucido extends Component {
+
    constructor(props) {
      super(props);
      this.state = {hasToken: false, isLoaded:false, token:'', selfieTime:false};
    }
+
    async checkLoggedIn() {
      try {
        const value = await AsyncStorage.multiGet(['token','selfieTime']);
@@ -40,6 +43,7 @@
        console.log(error);
      }
    }
+
    componentWillMount() {
      this.checkLoggedIn().then((result)=> {
        if(result===true){
@@ -56,7 +60,7 @@
        if (this.state.selfieTime === true){
         return(
            <Navigator
-           initialRoute = {{ id: 'signupCamera', mobile: "", name:"", email:"", image:"", token: this.state.token}}
+           initialRoute = {{ id: 'signupCamera', mobile: "", name:"", email:"", image:"", token: this.state.token , previousScreen:''}}
            renderScene={(route, navigator) =>
             this.renderScene(route, navigator)
              }
@@ -65,7 +69,7 @@
        }else if (this.state.selfieTime === false ){
         return(
            <Navigator
-           initialRoute = {{ id: 'contactList', mobile: "", name:"", email:"", image:""}}
+           initialRoute = {{ id: 'contactList', mobile: "", name:"", email:"", image:"", previousScreen:''}}
            renderScene={(route, navigator) =>
             this.renderScene(route, navigator)
              }
@@ -75,7 +79,7 @@
     }else if(token === false){
        return(
          <Navigator
-         initialRoute = {{ id: 'initial', mobile: "", name:"", email:"", image:""}}
+         initialRoute = {{ id: 'initial', mobile: "", name:"", email:"", image:"", previousScreen:''}}
          renderScene={(route, navigator) =>
           this.renderScene(route, navigator)
            }
@@ -110,7 +114,7 @@
     }else if (routeId === 'contactList') {
       return (
         <ContactList
-        navigator={navigator} image={route.image}/>
+        navigator={navigator} image={route.image} previousScreen={route.previousScreen}/>
       );
     }else if (routeId === 'initial') {
       return (
@@ -140,6 +144,10 @@
     }else if (routeId === 'editProfile') {
       return (
         <EditProfile navigator={navigator} image={route.image}/>
+      );
+    }else if (routeId === 'requestSent') {
+      return (
+        <RequestSent navigator={navigator} image={route.image}/>
       );
     }
   }

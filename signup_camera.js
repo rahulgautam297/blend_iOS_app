@@ -15,6 +15,7 @@ import {
   CameraScroll,
 } from 'react-native';
 import Camera from 'react-native-camera';
+import RNFetchBlob from 'react-native-fetch-blob'
 export default class SignupCamera extends Component {
 
   constructor(props) {
@@ -78,10 +79,14 @@ export default class SignupCamera extends Component {
   }
 
   storeImage(){
-    var RNFS = require('react-native-fs');
-    var path = RNFS.DocumentDirectoryPath + "/display_picture_path.txt";
-    RNFS.writeFile(path, JSON.stringify(this.state.image), 'utf8');
-    console.log(path);
+    let path = RNFetchBlob.fs.dirs.DocumentDir + '/display_picture.jpg';
+    let deletePath = this.state.image;
+    this.setState({image: path})
+    RNFetchBlob.fs.cp(deletePath, path)
+   .then(() => {
+    RNFetchBlob.fs.unlink(deletePath)
+    })
+    .catch(() => { console.log("bitch's throwing error.") })
   }
   renderImageOrCamera(){
     if (this.state.image==='') {
@@ -151,7 +156,7 @@ export default class SignupCamera extends Component {
       )
     }else if(this.state.twoButtons == true && this.state.showGif == true){
       return(
-        <TouchableHighlight style={styles.uploadHighlight}  underlayColor="#ffffff">
+        <TouchableHighlight style={styles.uploadHighlight}  underlayColor="#FF4500">
           <ActivityIndicator />
         </TouchableHighlight>
       )

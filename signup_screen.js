@@ -72,7 +72,7 @@ export default class Signup extends Component {
       <View style={styles.container}>
           <View style={styles.underlineInputTop}>
           <Text style={styles.textForName}>
-            Name &nbsp;
+            Full Name &nbsp;
             <Text style = {styles.errorText}>
               {this.state.nameError}
             </Text>

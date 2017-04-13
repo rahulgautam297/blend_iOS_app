@@ -11,6 +11,7 @@ import {
   TouchableHighlight,
   Image,
   AsyncStorage,
+  ActivityIndicator,
 } from 'react-native';
 import Camera from 'react-native-camera';
 export default class CameraSearch extends Component {
@@ -62,7 +63,7 @@ export default class CameraSearch extends Component {
           if (responseJson.hasOwnProperty("msg"))
             this.setState({error: responseJson.msg, showError:true, image:''});
         } else if(responseJson.code===1){
-            this.props.navigator.replace({id: 'contactList', gotResponse:true});
+            this.props.navigator.replace({ id: 'requestSent', image:responseJson.image });
         }
       })
       .catch((error) => {
@@ -126,7 +127,7 @@ export default class CameraSearch extends Component {
       return (
         <View style={styles.buttonView}>
           <TouchableHighlight style={styles.uploadHighlight} onPress={(showGif) =>{return null}}  underlayColor="#ffffff">
-            <Image source={require('./default.gif')}  style={styles.imageButton} />
+            <ActivityIndicator />
           </TouchableHighlight>
         </View>
       )

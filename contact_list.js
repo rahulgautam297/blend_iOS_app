@@ -16,11 +16,13 @@ import {
   RefreshControl,} from 'react-native';
 import Drawer from 'react-native-drawer';
 import DrawerPanel from './drawer_panel.js';
+import RNFetchBlob from 'react-native-fetch-blob';
 export default class ContactList extends Component {
   constructor(props) {
     super(props);
     this.state = {token:'', contacts:'', requests:'', name:'', gotData:false, refreshing:false, showContacts:true, sync:'',
-     inTransition:false, acceptAI:false, rejectAI:false, reportAI:false, status:"1", inTransition:false,searchText:"",showSearchBar:false, contactsCopy:'', requestsCopy:''};
+     inTransition:false, status:"1", inTransition:false,searchText:"",
+     showSearchBar:false, contactsCopy:'', requestsCopy:'', selectedRow:false};
   }
   async getVariable(item1, item2, item3, item4) {
     try {
@@ -38,11 +40,33 @@ export default class ContactList extends Component {
     this.getVariable("token", "sync", "name", "status").then((result)=> this.setState({token:result[0][1], sync:result[1][1], name:result[2][1],
        status:result[3][1]})).then(()=> {
       if(this.state.sync==null){
-        this.getContactsRequest().then(() => this.syncDone())
+        this.getContactsRequest().then(() => this.saveAllImages(this.state.contacts,this.state.requests) ).then(() => this.syncDone())
       }else if(this.state.sync === "1"){
         this.loadFromStorage();
       }
     });
+  }
+
+  saveAllImages(contacts, requests){
+    for (var i = 0; i < contacts.length; i++) {
+      this.receivePhoto(contacts[i].image,contacts[i].name,contacts[i].c_id)
+    }
+    for (var i = 0; i < requests.length; i++) {
+      this.receivePhoto(requests[i].image, requests[i].name, requests[i].c_id)
+    }
+  }
+
+  receivePhoto(link, name, c_id){
+    let dirs = RNFetchBlob.fs.dirs;
+    RNFetchBlob
+    .config({
+      path : dirs.DocumentDir+"/"+name+"_"+c_id + ".jpg"
+    })
+    .fetch('GET', link, {
+    })
+    .then((res) => {
+      console.log(res.path());
+    })
   }
 
   loadFromStorage(){
@@ -87,19 +111,30 @@ export default class ContactList extends Component {
     }
   }
 
+  removeAllContactsImages(contacts,requests){
+    for (var i = 0; i < contacts.length; i++) {
+      path = RNFetchBlob.fs.dirs.DocumentDir+"/"+contacts[i].name+"_"+contacts[i].c_id + ".jpg"
+      RNFetchBlob.fs.unlink(path);
+    }
+    for (var i = 0; i < requests.length; i++) {
+      path = RNFetchBlob.fs.dirs.DocumentDir+"/"+requests[i].name+"_"+requests[i].c_id + ".jpg"
+      RNFetchBlob.fs.unlink(path);
+    }
+  }
+
   clearEverything(){
     this.clearStorage().then(() =>{
       var RNFS = require('react-native-fs');
       var path = RNFS.DocumentDirectoryPath + '/contacts.txt';
-      return RNFS.unlink(path)
-      .then(() => {
-        var RNFS = require('react-native-fs');
-        var path = RNFS.DocumentDirectoryPath + '/display_picture.jpg';
-        return RNFS.unlink(path)
-      })
-      .catch((err) => {
-        console.log(err.message);
-      });
+      RNFS.unlink(path)
+    })
+    .then(() => {
+      var RNFS = require('react-native-fs');
+      var path = RNFS.DocumentDirectoryPath + '/display_picture.jpg';
+      RNFS.unlink(path)
+    })
+    .then(() => {
+      this.removeAllContactsImages(this.state.contacts,this.state.requests);
     })
     .then(() => {this.props.navigator.replace({id: 'initial'});})
   }
@@ -118,7 +153,6 @@ export default class ContactList extends Component {
     })
     .then((response) => response.json())
       .then((responseJson) => {
-        console.log(responseJson);
         this.setState({contacts:responseJson.connections, requests:responseJson.requests, gotData:true})
         var hash={};
         hash['contactsList'] = responseJson.connections;
@@ -156,33 +190,15 @@ export default class ContactList extends Component {
         var RNFS = require('react-native-fs');
         var path = RNFS.DocumentDirectoryPath + '/contacts.txt';
         RNFS.writeFile(path, JSON.stringify(hash), 'utf8');
+        return responseJson
       })
+      .then((json) => { this.saveAllImages(json.connections,json.requests)})
       .catch((error) => {
         console.error(error);
     });
   }
 
-  renderContact(rowData){
-    return(
-        <TouchableHighlight onPress={() => {
-          this.props.navigator.
-          replace({id: 'card', name:rowData.name, email:rowData.email, mobile:rowData.mobile});}}
-           underlayColor="white" style={styles.rowTouchableButton}>
-           <View style={styles.rowContentContainer}>
-           <View style={styles.testImageContainer}>
-              <Image source={require('./sandra.png')}  style={styles.testImage} />
-            </View>
-            <View style={styles.rowContentTextContainer}>
-              <Text style={styles.rowName}>{rowData.name}</Text>
-              <Text style={styles.rowDesignation}>Creative Writer</Text>
-            </View>
-          </View>
-        </TouchableHighlight>
-    )
-  }
-
-
-  acceptDeclineOrBlock(c_id,select){
+  acceptDeclineOrBlock(rowData,select){
     var that = this;
     return fetch('http://production.cp8pxbibac.us-west-2.elasticbeanstalk.com/api/v1/fate_of_request', {
       method: 'POST',
@@ -193,23 +209,25 @@ export default class ContactList extends Component {
       body: JSON.stringify({
         token: that.state.token,
         select: select,
-        c_id: c_id
+        c_id: rowData.c_id
       })
     })
     .then((response) => response.json())
       .then((responseJson) => {
-        let requests = this.state.requests.splice(c_id, 1);
+        let index = this.state.requests.indexOf(rowData);
+        let requests = this.state.requests;
+        requests.splice(index, 1);
         var hash={};
         hash['requestsList'] = requests;
         if(select === 1){
-          responseJson.user["c_id"] = c_id;
+          responseJson.user["c_id"] = rowData.c_id;
           let contact=[];
           contact.push(responseJson.user);
           let contacts = contact.concat(this.state.contacts);
           if (requests.length==0){
-            this.setState({requests:requests, contacts:contacts, showContacts:true, inTransition:false, acceptAI:false, rejectAI:false, reportAI:false});
+            this.setState({requests:requests, contacts:contacts, showContacts:true, inTransition:false});
           }else{
-            this.setState({requests:requests, contacts:contacts, inTransition:false, acceptAI:false, rejectAI:false, reportAI:false});
+            this.setState({requests:requests, contacts:contacts, inTransition:false});
           }
           hash['contactsList'] = contacts;
           var RNFS = require('react-native-fs');
@@ -217,9 +235,9 @@ export default class ContactList extends Component {
           RNFS.writeFile(path, JSON.stringify(hash), 'utf8');
         }else{
           if (requests.length==0){
-            this.setState({requests:requests, inTransition:false, acceptAI:false, rejectAI:false, reportAI:false, showContacts:true});
+            this.setState({requests:requests, inTransition:false, showContacts:true});
           }else{
-            this.setState({requests:requests, inTransition:false, acceptAI:false, rejectAI:false, reportAI:false});
+            this.setState({requests:requests, inTransition:false});
           }
           hash['contactsList'] = this.state.contacts;
           var RNFS = require('react-native-fs');
@@ -232,42 +250,50 @@ export default class ContactList extends Component {
     });
   }
 
-  renderAcceptOrGif(stateName,select,c_id){
-    if(stateName==false){
-      return(
-        <TouchableHighlight style={styles.newReqsButton} disabled={this.state.inTransition}
-         onPress={() => {this.setState({inTransition:true,acceptAI:true}); this.acceptDeclineOrBlock(c_id ,select);}} underlayColor="transparent">
-          <Image source={require('./accept.png')}  style={styles.imageButton} />
-        </TouchableHighlight>
-      )
-    }else {
-      return (<ActivityIndicator />)
-    }
-  }
-  renderRejectOrGif(stateName,select,c_id){
-    if(stateName==false){
-      return(
-        <TouchableHighlight style={styles.newReqsButton} disabled={this.state.inTransition}
-         onPress={() => {this.setState({inTransition:true,rejectAI:true}); this.acceptDeclineOrBlock(c_id ,select);}} underlayColor="transparent">
-          <Image source={require('./reject.png')}  style={styles.imageButton} />
-        </TouchableHighlight>
-      )
-    }else {
-      return (<ActivityIndicator />)
-    }
+  renderAcceptOrGif(select,rowData){
+    return(
+      <TouchableHighlight style={styles.newReqsButton} disabled={this.state.inTransition}
+       onPress={() => {this.setState({inTransition:true}); this.acceptDeclineOrBlock(rowData ,select);}} underlayColor="transparent">
+        <Image source={require('./accept.png')}  style={styles.imageButton} />
+      </TouchableHighlight>
+    )
   }
 
-  renderReportOrGif(stateName,c_id){
-    if(stateName==false){
-      return(
-        <TouchableHighlight style={styles.reportButton} disabled={this.state.inTransition}
-         onPress={() => {this.setState({inTransition:true,reportAI:true});this.acceptDeclineOrBlock(c_id, 2);}} underlayColor="transparent">
-          <Text style={styles.reportText}>REPORT</Text>
-        </TouchableHighlight>
-      )
-    }else {
-      return (<ActivityIndicator />)
-    }
+  renderRejectOrGif(select,rowData){
+    return(
+      <TouchableHighlight style={styles.newReqsButton} disabled={this.state.inTransition}
+       onPress={() => {this.setState({inTransition:true}); this.acceptDeclineOrBlock(rowData, select);}} underlayColor="transparent">
+        <Image source={require('./reject.png')}  style={styles.imageButton} />
+      </TouchableHighlight>
+    )
+  }
+
+  renderReportOrGif(rowData){
+    return(
+      <TouchableHighlight style={styles.reportButton} disabled={this.state.inTransition}
+       onPress={() => {this.setState({inTransition:true});this.acceptDeclineOrBlock(rowData, 2);}} underlayColor="transparent">
+        <Text style={styles.reportText}>REPORT</Text>
+      </TouchableHighlight>
+    )
+  }
+
+  renderRequest(rowData){
+    let dirs = RNFetchBlob.fs.dirs.DocumentDir+"/"+rowData.name+"_"+rowData.c_id + ".jpg";
+    return(
+      <View style={styles.requestContainer}>
+        <View style={styles.requestRowContentContainer}>
+          <View style={styles.requestImageContainer}>
+             <Image source={{uri: dirs}}  style={styles.requestImage} />
+          </View>
+          <Text style={styles.rowName}> {rowData.name} </Text>
+        </View>
+        <View style={styles.buttonRowContainer}>
+          {this.renderAcceptOrGif(1,rowData)}
+          {this.renderRejectOrGif(0,rowData)}
+          {this.renderReportOrGif(rowData)}
+        </View>
+      </View>
+    )
   }
 
   renderRequests(){
@@ -296,17 +322,7 @@ export default class ContactList extends Component {
           enableEmptySections={true}
           keyboardShouldPersistTaps={'always'}
           dataSource={dsa.cloneWithRows(this.state.requests)}
-          renderRow = {(rowData) => (
-                                    <View style={styles.listRowContainer}>
-                                      <Text style={styles.listRow}> {rowData.name} </Text>
-                                      <Text style={styles.designation}>Creative Writer</Text>
-                                      <View style={styles.buttonRowContainer}>
-                                      {this.renderAcceptOrGif(this.state.acceptAI,1,rowData.c_id)}
-                                      {this.renderRejectOrGif(this.state.rejectAI,0,rowData.c_id)}
-                                      {this.renderReportOrGif(this.state.reportAI,rowData.c_id)}
-                                      </View>
-                                    </View>
-                                  )}
+          renderRow = {(rowData) => (this.renderRequest(rowData))}
           refreshControl={
           <RefreshControl
             refreshing={this.state.refreshing}
@@ -318,10 +334,29 @@ export default class ContactList extends Component {
     }
   }
 
+  renderContact(rowData){
+    let dirs = RNFetchBlob.fs.dirs.DocumentDir+"/"+rowData.name+"_"+rowData.c_id + ".jpg";
+    return(
+        <TouchableHighlight onPress={() => {
+          this.props.navigator.
+          replace({id: 'card', name:rowData.name, email:rowData.email, mobile:rowData.mobile , image:dirs, designation: rowData.designation});}}
+           underlayColor="white" style={styles.rowTouchableButton}>
+           <View style={styles.rowContentContainer}>
+            <View style={styles.testImageContainer}>
+              <Image source={{uri: dirs}}  style={styles.testImage} />
+            </View>
+            <View style={styles.rowContentTextContainer}>
+              <Text style={styles.rowName}>{rowData.name}</Text>
+              <Text style={styles.rowDesignation}>{rowData.designation}</Text>
+            </View>
+          </View>
+        </TouchableHighlight>
+    )
+  }
 
   renderContacts(){
      const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
-     if (this.state.contacts.length==0){
+                                if (this.state.contacts.length==0){
        return (
          <ListView
            enableEmptySections={true}
@@ -363,6 +398,7 @@ export default class ContactList extends Component {
        return(this.renderContacts())
     }
   }
+
   showRequests(){
     if (!this.state.gotData && !this.state.showContacts) {
       return (<ActivityIndicator />)
@@ -560,6 +596,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems:'center'
   },
+  requestRowContentContainer:{
+    flex: 1,
+    flexDirection: 'column',
+    alignItems:'center',
+  },
   rowTouchableButton:{
     width:Dimensions.get('window').width,
     height:70,
@@ -617,6 +658,15 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     overflow:'hidden'
   },
+  requestImage:{
+    width:60,
+    height:60,
+  },
+  requestImageContainer:{
+    borderRadius: 40,
+    marginLeft: 10,
+    overflow:'hidden'
+  },
   addContactButtonContainer:{
     height:Dimensions.get('window').height/8,
     alignItems: 'center',
@@ -633,12 +683,12 @@ const styles = StyleSheet.create({
     height:80,
   },
   searchBar: {
-  paddingLeft: 30,
-  fontSize: 22,
-  height: Dimensions.get('window').height/12,
-  width:Dimensions.get('window').width*0.8,
-  borderWidth: 7,
-  borderColor: "#E4E4E4",
+    paddingLeft: 30,
+    fontSize: 22,
+    height: Dimensions.get('window').height/12,
+    width:Dimensions.get('window').width*0.8,
+    borderWidth: 7,
+    borderColor: "#E4E4E4",
   },
   searchBoxContainer:{
     height: Dimensions.get('window').height/12,
@@ -653,5 +703,8 @@ const styles = StyleSheet.create({
   cancelText:{
     fontWeight:'bold',
     fontSize:17,
+  },
+  requestContainer:{
+    flexDirection: 'column',
   }
 });

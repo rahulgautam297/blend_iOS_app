@@ -62,7 +62,7 @@ export default class RequestSent extends Component {
     return (
       <View style={styles.container}>
         {this.setImage()}
-        <Text style={styles.sentText}>Reqeust Sent!</Text>
+        <Text style={styles.sentText}>Request Sent!</Text>
         <TouchableHighlight style={styles.saveButtonTouch}  onPress={() =>{this.removeImageThenLeave();}} underlayColor="transparent">
           <Image source={require('./accept.png')} style={styles.saveImage} />
         </TouchableHighlight>

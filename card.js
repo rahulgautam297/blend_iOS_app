@@ -20,14 +20,14 @@ export default class Card extends Component {
             <Image source={require('./cross.png')}  style={styles.crossButton} />
           </TouchableHighlight>
           <View style={styles.testImageContainer}>
-             <Image source={require('./sandra.png')}  style={styles.testImage} />
+             <Image source={{uri: this.props.image}} style={styles.testImage} />
           </View>
           <View style={styles.infoContainer}>
             <Text style={styles.nameText}>
               {this.props.name}
             </Text>
             <Text style={styles.professionText}>
-              Creative Writer
+              {this.props.designation}
             </Text>
             <TouchableHighlight  underlayColor="transparent" onPress={() => Linking.openURL('tel:'+ this.props.mobile)}>
               <Text style={styles.mobileText}>

@@ -139,7 +139,7 @@
     }else if (routeId === 'card') {
       return (
         <Card
-        navigator={navigator} mobile={route.mobile} email={route.email} name={route.name}/>
+        navigator={navigator} mobile={route.mobile} email={route.email} name={route.name} image={route.image} designation={route.designation}/>
       );
     }else if (routeId === 'editProfile') {
       return (

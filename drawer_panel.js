@@ -75,6 +75,7 @@ export default class DrawerPanel extends Component {
   }
 
   receiveImage(){
+    console.log(dirs);
     let dirs = RNFetchBlob.fs.dirs
     RNFetchBlob
     .config({

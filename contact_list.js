@@ -356,7 +356,7 @@ export default class ContactList extends Component {
 
   renderContacts(){
      const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
-                                if (this.state.contacts.length==0){
+     if (this.state.contacts.length==0){
        return (
          <ListView
            enableEmptySections={true}

@@ -13,6 +13,7 @@ import {
   AsyncStorage,
   ActivityIndicator,
 } from 'react-native';
+import RNFetchBlob from 'react-native-fetch-blob';
 import Camera from 'react-native-camera';
 export default class CameraSearch extends Component {
 
@@ -60,16 +61,22 @@ export default class CameraSearch extends Component {
         console.log(responseJson);
          this.setState({showGif:false});
         if (responseJson.code===0){
+          this.removePhoto()
           if (responseJson.hasOwnProperty("msg"))
             this.setState({error: responseJson.msg, showError:true, image:''});
         } else if(responseJson.code===1){
-            this.props.navigator.replace({ id: 'requestSent', image:responseJson.image });
+            this.removePhoto().then(() =>{this.props.navigator.replace({ id: 'requestSent', image:responseJson.image });})
         }
       })
       .catch((error) => {
         console.error(error);
     });
   }
+
+  removePhoto(){
+    RNFetchBlob.fs.unlink(this.state.image);
+  }
+
   renderCamera(){
     return(
               <Camera

@@ -71,18 +71,18 @@ export default class Signup extends Component {
     return (
       <View style={styles.container}>
           <View style={styles.underlineInputTop}>
-          <Text style={styles.textForName}>
-            Full Name &nbsp;
-            <Text style = {styles.errorText}>
-              {this.state.nameError}
+            <Text style={styles.textForName}>
+              Full Name &nbsp;
+              <Text style = {styles.errorText}>
+                {this.state.nameError}
+              </Text>
             </Text>
-          </Text>
-              <TextInput
-              style={styles.inputForName}
-              onChangeText={(name) => this.setState({name})}
-              value={this.state.name}
-              autoFocus={true}
-              />
+            <TextInput
+            style={styles.inputForName}
+            onChangeText={(name) => this.setState({name})}
+            value={this.state.name}
+            autoFocus={true}
+            />
           </View>
           <View style={styles.underlineInput}>
             <Text style={styles.textForEmail}>
@@ -138,20 +138,20 @@ const styles = StyleSheet.create({
   underlineInput: {
     borderBottomColor: '#ddd',
     borderBottomWidth: 1,
-    width: 265,
+    width: Dimensions.get('window').width*0.8,
  },
  underlineInputTop: {
    borderBottomColor: '#ddd',
    borderBottomWidth: 1,
    marginTop:Dimensions.get('window').width/4,
-   width: 265,
+   width: Dimensions.get('window').width*0.8,
  },
   errorText: {
     fontSize:13,
     color: "#d3d3d3"
   },
   inputForMobile:{
-    height:22,
+    height:27,
     color:"#ffffff",
     fontSize:22,
     marginTop:12,
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     fontSize: 14
   },
   inputForName:{
-    height:22,
+    height:27,
     color:"#ffffff",
     fontSize:22,
     marginTop:12,
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
     fontSize: 14
   },
   inputForEmail:{
-    height:22,
+    height:27,
     color:"#ffffff",
     fontSize:22,
     marginTop:12,

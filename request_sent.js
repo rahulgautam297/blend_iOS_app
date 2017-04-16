@@ -18,7 +18,7 @@ export default class RequestSent extends Component {
   }
 
   componentWillMount() {
-    this.receivePhoto();
+    RNFetchBlob.fs.unlink(this.props.delete_image).then(() => {this.receivePhoto();})
   }
 
   receivePhoto(){

@@ -65,7 +65,7 @@ export default class CameraSearch extends Component {
           if (responseJson.hasOwnProperty("msg"))
             this.setState({error: responseJson.msg, showError:true, image:''});
         } else if(responseJson.code===1){
-            this.removePhoto().then(() =>{this.props.navigator.replace({ id: 'requestSent', image:responseJson.image });})
+            this.props.navigator.replace({ id: 'requestSent', image:responseJson.image, delete_image:this.state.image });
         }
       })
       .catch((error) => {

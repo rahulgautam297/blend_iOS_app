@@ -147,7 +147,7 @@
       );
     }else if (routeId === 'requestSent') {
       return (
-        <RequestSent navigator={navigator} image={route.image}/>
+        <RequestSent navigator={navigator} image={route.image} delete_image = {route.delete_image}/>
       );
     }
   }

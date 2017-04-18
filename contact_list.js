@@ -21,8 +21,8 @@ export default class ContactList extends Component {
   constructor(props) {
     super(props);
     this.state = {token:'', contacts:'', requests:'', name:'', gotData:false, refreshing:false, showContacts:true, sync:'',
-     inTransition:false, status:"1", inTransition:false,searchText:"",
-     showSearchBar:false, contactsCopy:'', requestsCopy:'', selectedRow:false};
+     inTransition:false, status:"1", searchText:"",
+     showSearchBar:false, contactsCopy:'', requestsCopy:'', selectedRow:false, requestSelected:[]};
   }
   async getVariable(item1, item2, item3, item4) {
     try {
@@ -225,9 +225,9 @@ export default class ContactList extends Component {
           contact.push(responseJson.user);
           let contacts = contact.concat(this.state.contacts);
           if (requests.length==0){
-            this.setState({requests:requests, contacts:contacts, showContacts:true, inTransition:false});
+            this.setState({requests:requests, contacts:contacts, showContacts:true});
           }else{
-            this.setState({requests:requests, contacts:contacts, inTransition:false});
+            this.setState({requests:requests, contacts:contacts});
           }
           hash['contactsList'] = contacts;
           var RNFS = require('react-native-fs');
@@ -235,61 +235,76 @@ export default class ContactList extends Component {
           RNFS.writeFile(path, JSON.stringify(hash), 'utf8');
         }else{
           if (requests.length==0){
-            this.setState({requests:requests, inTransition:false, showContacts:true});
+            this.setState({requests:requests, showContacts:true});
           }else{
-            this.setState({requests:requests, inTransition:false});
+            this.setState({requests:requests});
           }
           hash['contactsList'] = this.state.contacts;
           var RNFS = require('react-native-fs');
           var path = RNFS.DocumentDirectoryPath + '/contacts.txt';
           RNFS.writeFile(path, JSON.stringify(hash), 'utf8');
         }
+        // not needed
+        let array = this.state.requestSelected;
+        for (var i = 0; i < array.length; i++) {
+          if (array[i].touched === true){
+            array.splice(i,1);
+            break;
+          }
+        }
+        this.setState({requestSelected: array});
       })
       .catch((error) => {
         console.error(error);
     });
   }
 
-  // setActivityIndicator(c_id) {
-  //   if(this.state.requestSelected.length === 0){
-  //     let booleanArray = [];
-  //     for (var i = 0; i < this.state.requests.length; i++) {
-  //       booleanArray.push({touched:false, c_id: this.state.requests[i].c_id});
-  //     }
-  //     this.setState({requestSelected:booleanArray})
-  //   }
-  //   let array = this.state.requestSelected;
-  //   for (var i = 0; i < array.length; i++) {
-  //     if (array[i].c_id === c_id)
-  //       array[i].touched = true;
-  //   }
-  // }
+  setActivityIndicator(c_id) {
+    let booleanArray = this.state.requestSelected;
+    if(booleanArray.length === 0){
+      for (var i = 0; i < this.state.requests.length; i++) {
+        booleanArray.push({touched:false, c_id: this.state.requests[i].c_id});
+      }
+      this.setState({requestSelected:booleanArray})
+    }
 
-  renderAcceptOrGif(select,rowData){
-    return(
-      <TouchableHighlight style={styles.newReqsButton} disabled={this.state.inTransition}
-       onPress={() => {this.setState({inTransition:true}); this.acceptDeclineOrBlock(rowData ,select); }} underlayColor="transparent">
-        <Image source={require('./accept.png')}  style={styles.imageButton} />
-      </TouchableHighlight>
-    )
+    for (var i = 0; i < booleanArray.length; i++) {
+      if (booleanArray[i].c_id === c_id){
+        booleanArray[i].touched = true;
+        break;
+      }
+    }
+    console.log(booleanArray);
+    this.setState({requestSelected: booleanArray})
   }
 
-  renderRejectOrGif(select,rowData){
+  renderButtonsOrGif(rowData){
+    let rowTouched = false;
+    for (var i = 0; i < this.state.requestSelected.length; i++) {
+      if(this.state.requestSelected[i].c_id === rowData.c_id){
+        rowTouched = this.state.requestSelected[i].touched
+      }
+    }
+    if (rowTouched === false)
     return(
-      <TouchableHighlight style={styles.newReqsButton} disabled={this.state.inTransition}
-       onPress={() => {this.setState({inTransition:true}); this.acceptDeclineOrBlock(rowData, select);}} underlayColor="transparent">
-        <Image source={require('./reject.png')}  style={styles.imageButton} />
-      </TouchableHighlight>
+      <View style={styles.buttonRowContainer}>
+        <TouchableHighlight style={styles.newReqsButton}
+         onPress={() => { this.setActivityIndicator(rowData.c_id); this.acceptDeclineOrBlock(rowData, 1); }} underlayColor="transparent">
+          <Image source={require('./accept.png')}  style={styles.imageButton} />
+        </TouchableHighlight>
+        <TouchableHighlight style={styles.newReqsButton}
+         onPress={() => { this.setActivityIndicator(rowData.c_id); this.acceptDeclineOrBlock(rowData, 0);}} underlayColor="transparent">
+          <Image source={require('./reject.png')}  style={styles.imageButton} />
+        </TouchableHighlight>
+        <TouchableHighlight style={styles.reportButton}
+         onPress={() => {this.setActivityIndicator(rowData.c_id); this.acceptDeclineOrBlock(rowData, 2);}} underlayColor="transparent">
+          <Text style={styles.reportText}>REPORT</Text>
+        </TouchableHighlight>
+      </View>
     )
-  }
-
-  renderReportOrGif(rowData){
-    return(
-      <TouchableHighlight style={styles.reportButton} disabled={this.state.inTransition}
-       onPress={() => {this.setState({inTransition:true});this.acceptDeclineOrBlock(rowData, 2);}} underlayColor="transparent">
-        <Text style={styles.reportText}>REPORT</Text>
-      </TouchableHighlight>
-    )
+    else{
+      return (<ActivityIndicator />)
+    }
   }
 
   renderRequest(rowData){
@@ -302,11 +317,7 @@ export default class ContactList extends Component {
           </View>
           <Text style={styles.rowName}> {rowData.name} </Text>
         </View>
-        <View style={styles.buttonRowContainer}>
-          {this.renderAcceptOrGif(1,rowData)}
-          {this.renderRejectOrGif(0,rowData)}
-          {this.renderReportOrGif(rowData)}
-        </View>
+        {this.renderButtonsOrGif(rowData)}
       </View>
     )
   }

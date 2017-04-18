@@ -40,7 +40,7 @@ export default class ContactList extends Component {
     this.getVariable("token", "sync", "name", "status").then((result)=> this.setState({token:result[0][1], sync:result[1][1], name:result[2][1],
        status:result[3][1]})).then(()=> {
       if(this.state.sync==null){
-        this.getContactsRequest().then(() => this.saveAllImages(this.state.contacts,this.state.requests) ).then(() => this.syncDone())
+        this.getContactsRequest().then(() => this.saveAllImages(this.state.contacts,this.state.requests)).then(()=>this.syncDone())
       }else if(this.state.sync === "1"){
         this.loadFromStorage();
       }
@@ -250,10 +250,25 @@ export default class ContactList extends Component {
     });
   }
 
+  // setActivityIndicator(c_id) {
+  //   if(this.state.requestSelected.length === 0){
+  //     let booleanArray = [];
+  //     for (var i = 0; i < this.state.requests.length; i++) {
+  //       booleanArray.push({touched:false, c_id: this.state.requests[i].c_id});
+  //     }
+  //     this.setState({requestSelected:booleanArray})
+  //   }
+  //   let array = this.state.requestSelected;
+  //   for (var i = 0; i < array.length; i++) {
+  //     if (array[i].c_id === c_id)
+  //       array[i].touched = true;
+  //   }
+  // }
+
   renderAcceptOrGif(select,rowData){
     return(
       <TouchableHighlight style={styles.newReqsButton} disabled={this.state.inTransition}
-       onPress={() => {this.setState({inTransition:true}); this.acceptDeclineOrBlock(rowData ,select);}} underlayColor="transparent">
+       onPress={() => {this.setState({inTransition:true}); this.acceptDeclineOrBlock(rowData ,select); }} underlayColor="transparent">
         <Image source={require('./accept.png')}  style={styles.imageButton} />
       </TouchableHighlight>
     )

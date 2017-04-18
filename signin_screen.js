@@ -144,6 +144,9 @@ export default class Signin extends Component {
   render() {
     return (
       <View style={styles.container}>
+        <TouchableHighlight style={styles.crossButtonTouch} onPress={() =>{this.props.navigator.replace({id: 'initial'}); }}>
+          <Image source={require('./cross.png')}  style={styles.crossButton} />
+        </TouchableHighlight>
         <View style={styles.underlineInputTop}>
           <Text style={styles.ForMobileText}>
             Mobile &nbsp;
@@ -220,7 +223,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ddd',
     borderBottomWidth: 1,
     width: 265,
-    marginTop:Dimensions.get('window').width/4,
+    marginTop:40,
  },
   errorText: {
     fontSize:13,
@@ -237,5 +240,16 @@ const styles = StyleSheet.create({
   forSignInText:{
     color: '#FF4500',
     fontSize: 25
-  }
+  },
+  crossButton: {
+    width:25,
+    height:25,
+    marginTop:30,
+    marginLeft:15,
+  },
+  crossButtonTouch:{
+    width:50,
+    height:50,
+    alignSelf:'flex-start',
+  },
 });

@@ -70,6 +70,9 @@ export default class Signup extends Component {
   render() {
     return (
       <View style={styles.container}>
+        <TouchableHighlight style={styles.crossButtonTouch} onPress={() =>{this.props.navigator.replace({id: 'initial'}); }}>
+          <Image source={require('./cross.png')}  style={styles.crossButton} />
+        </TouchableHighlight>
           <View style={styles.underlineInputTop}>
             <Text style={styles.textForName}>
               Full Name &nbsp;
@@ -143,7 +146,7 @@ const styles = StyleSheet.create({
  underlineInputTop: {
    borderBottomColor: '#ddd',
    borderBottomWidth: 1,
-   marginTop:Dimensions.get('window').width/4,
+   marginTop:40,
    width: Dimensions.get('window').width*0.8,
  },
   errorText: {
@@ -185,5 +188,16 @@ const styles = StyleSheet.create({
   imageButton: {
     width:30,
     height:30,
+  },
+  crossButton: {
+    width:25,
+    height:25,
+    marginTop:30,
+    marginLeft:15,
+  },
+  crossButtonTouch:{
+    width:50,
+    height:50,
+    alignSelf:'flex-start',
   },
 });

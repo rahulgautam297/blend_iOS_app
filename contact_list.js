@@ -274,52 +274,7 @@ export default class ContactList extends Component {
         break;
       }
     }
-    console.log(booleanArray);
     this.setState({requestSelected: booleanArray})
-  }
-
-  renderButtonsOrGif(rowData){
-    let rowTouched = false;
-    for (var i = 0; i < this.state.requestSelected.length; i++) {
-      if(this.state.requestSelected[i].c_id === rowData.c_id){
-        rowTouched = this.state.requestSelected[i].touched
-      }
-    }
-    if (rowTouched === false)
-    return(
-      <View style={styles.buttonRowContainer}>
-        <TouchableHighlight style={styles.newReqsButton}
-         onPress={() => { this.setActivityIndicator(rowData.c_id); this.acceptDeclineOrBlock(rowData, 1); }} underlayColor="transparent">
-          <Image source={require('./accept.png')}  style={styles.imageButton} />
-        </TouchableHighlight>
-        <TouchableHighlight style={styles.newReqsButton}
-         onPress={() => { this.setActivityIndicator(rowData.c_id); this.acceptDeclineOrBlock(rowData, 0);}} underlayColor="transparent">
-          <Image source={require('./reject.png')}  style={styles.imageButton} />
-        </TouchableHighlight>
-        <TouchableHighlight style={styles.reportButton}
-         onPress={() => {this.setActivityIndicator(rowData.c_id); this.acceptDeclineOrBlock(rowData, 2);}} underlayColor="transparent">
-          <Text style={styles.reportText}>REPORT</Text>
-        </TouchableHighlight>
-      </View>
-    )
-    else{
-      return (<ActivityIndicator />)
-    }
-  }
-
-  renderRequest(rowData){
-    let dirs = RNFetchBlob.fs.dirs.DocumentDir+"/"+rowData.name+"_"+rowData.c_id + ".jpg";
-    return(
-      <View style={styles.requestContainer}>
-        <View style={styles.requestRowContentContainer}>
-          <View style={styles.requestImageContainer}>
-             <Image source={{uri: dirs}}  style={styles.requestImage} />
-          </View>
-          <Text style={styles.rowName}> {rowData.name} </Text>
-        </View>
-        {this.renderButtonsOrGif(rowData)}
-      </View>
-    )
   }
 
   renderRequests(){
@@ -575,6 +530,53 @@ export default class ContactList extends Component {
       </Drawer>
     )
   }
+  renderRequest(rowData){
+    let dirs = RNFetchBlob.fs.dirs.DocumentDir+"/"+rowData.name+"_"+rowData.c_id + ".jpg";
+    return(
+      <View style={styles.requestContainer}>
+        <View style={styles.requestRowContentContainer}>
+          <View style={styles.requestImageContainer}>
+             <Image source={{uri: dirs}}  style={styles.requestImage} />
+          </View>
+          <Text style={styles.requestRowName}> {rowData.name} </Text>
+        </View>
+        {this.renderButtonsOrGif(rowData)}
+      </View>
+    )
+  }
+
+  renderButtonsOrGif(rowData){
+    let rowTouched = false;
+    for (var i = 0; i < this.state.requestSelected.length; i++) {
+      if(this.state.requestSelected[i].c_id === rowData.c_id){
+        rowTouched = this.state.requestSelected[i].touched
+      }
+    }
+    if (rowTouched === false)
+    return(
+      <View style={styles.buttonRowContainer}>
+        <View style={styles.innerButtonRowContainer1}>
+          <TouchableHighlight style={styles.tickButton}
+           onPress={() => { this.setActivityIndicator(rowData.c_id); this.acceptDeclineOrBlock(rowData, 1); }} underlayColor="transparent">
+            <Image source={require('./accept.png')}  style={styles.imageButton} />
+          </TouchableHighlight>
+          <TouchableHighlight style={styles.notButton}
+           onPress={() => { this.setActivityIndicator(rowData.c_id); this.acceptDeclineOrBlock(rowData, 0);}} underlayColor="transparent">
+            <Image source={require('./reject.png')}  style={styles.imageButton} />
+          </TouchableHighlight>
+        </View>
+        <View style={styles.innerButtonRowContainer2}>
+          <TouchableHighlight style={styles.reportButton}
+           onPress={() => {this.setActivityIndicator(rowData.c_id); this.acceptDeclineOrBlock(rowData, 2);}} underlayColor="transparent">
+            <Text style={styles.reportText}>REPORT</Text>
+          </TouchableHighlight>
+        </View>
+      </View>
+    )
+    else{
+      return (<ActivityIndicator />)
+    }
+  }
 }
 const styles = StyleSheet.create({
   container: {
@@ -589,11 +591,6 @@ const styles = StyleSheet.create({
     justifyContent:"space-around",
     backgroundColor:"white",
     alignItems: 'center'
-  },
-  reportButton:{
-    backgroundColor: "#E74C3C",
-    padding:10,
-    borderRadius: 50,
   },
   headingButton:{
     color:"#ff7000",
@@ -614,6 +611,11 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight:'500'
   },
+  requestRowName:{
+    fontSize: 23,
+    fontWeight:'500',
+    marginLeft:25,
+  },
   rowDesignation:{
     fontSize: 15,
   },
@@ -623,9 +625,35 @@ const styles = StyleSheet.create({
     alignItems:'center'
   },
   requestRowContentContainer:{
-    flex: 1,
-    flexDirection: 'column',
+    flexDirection: 'row',
     alignItems:'center',
+    marginLeft:10,
+  },
+  reportButton:{
+    backgroundColor: "#E74C3C",
+    padding:10,
+    borderRadius: 50,
+    marginRight:15,
+  },
+  buttonRowContainer:{
+    flexDirection:"row",
+  },
+  innerButtonRowContainer1:{
+    flex:0.5,
+    flexDirection:'row',
+    alignItems:'center',
+    justifyContent:'flex-end',
+  },
+  innerButtonRowContainer2:{
+    flex:0.5,
+    flexDirection:'row',
+    alignItems:'center',
+    justifyContent:'flex-end',
+  },
+  tickButton:{
+  },
+  notButton:{
+    marginLeft:-5,
   },
   rowTouchableButton:{
     width:Dimensions.get('window').width,
@@ -635,7 +663,10 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'column',
     alignItems:'flex-start',
-    marginLeft:30
+  },
+  requestContainer:{
+    flexDirection: 'column',
+    width:Dimensions.get('window').width,
   },
   designation: {
     fontSize: 12,
@@ -647,10 +678,6 @@ const styles = StyleSheet.create({
   imageButton:{
     width:50,
     height:50,
-  },
-  buttonRowContainer:{
-    flexDirection: 'row',
-    alignItems: 'center',
   },
   firstSubContainer:{
     flexDirection: 'row',
@@ -730,7 +757,4 @@ const styles = StyleSheet.create({
     fontWeight:'bold',
     fontSize:17,
   },
-  requestContainer:{
-    flexDirection: 'column',
-  }
 });

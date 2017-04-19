@@ -12,7 +12,7 @@ export default class InitialScreen extends Component {
   render() {
     return (
       <View style={styles.container}>
-        <Image source={require('./initial.jpg')} style={styles.backgroundImage} >
+        <Image source={require('./initial.png')} style={styles.backgroundImage} >
           <TouchableHighlight style={styles.textHighlight} onPress={() =>{this.props.navigator.replace({id: 'signup'});}} underlayColor="#8b0000">
             <Text style={styles.buttons}>
               Sign Up
@@ -77,17 +77,16 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     opacity:0.9,
     textAlign:'center',
-    marginTop: 5,
+    marginTop: 7,
     fontSize: 11,
     fontWeight: '600',
-
   },
   agreement2:{
     color: '#FFFFFF',
     opacity:0.9,
     textAlign:'center',
     marginTop: 5,
-    marginBottom: 70,
+    marginBottom: 15,
     fontSize: 11,
     fontWeight: '600',
 

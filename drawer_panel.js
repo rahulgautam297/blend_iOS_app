@@ -216,6 +216,9 @@ const styles = StyleSheet.create({
   },
   switchContainer:{
     marginRight:15,
+    height:10,
+    alignItems:"center",
+    justifyContent:"center",
   },
   fiveButtonContainer:{
     marginTop:40,

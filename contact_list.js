@@ -315,26 +315,6 @@ export default class ContactList extends Component {
     }
   }
 
-  renderContact(rowData){
-    let dirs = RNFetchBlob.fs.dirs.DocumentDir+"/"+rowData.name+"_"+rowData.c_id + ".jpg";
-    return(
-        <TouchableHighlight onPress={() => {
-          this.props.navigator.
-          replace({id: 'card', name:rowData.name, email:rowData.email, mobile:rowData.mobile , image:dirs, designation: rowData.designation});}}
-           underlayColor="white" style={styles.rowTouchableButton}>
-           <View style={styles.rowContentContainer}>
-            <View style={styles.testImageContainer}>
-              <Image source={{uri: dirs}}  style={styles.testImage} />
-            </View>
-            <View style={styles.rowContentTextContainer}>
-              <Text style={styles.rowName}>{rowData.name}</Text>
-              <Text style={styles.rowDesignation}>{rowData.designation}</Text>
-            </View>
-          </View>
-        </TouchableHighlight>
-    )
-  }
-
   renderContacts(){
      const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
      if (this.state.contacts.length==0){
@@ -577,6 +557,26 @@ export default class ContactList extends Component {
       return (<ActivityIndicator />)
     }
   }
+
+  renderContact(rowData){
+    let dirs = RNFetchBlob.fs.dirs.DocumentDir+"/"+rowData.name+"_"+rowData.c_id + ".jpg";
+    return(
+        <TouchableHighlight onPress={() => {
+          this.props.navigator.
+          replace({id: 'card', name:rowData.name, email:rowData.email, mobile:rowData.mobile , image:dirs, designation: rowData.designation});}}
+           underlayColor="white" style={styles.rowTouchableButton}>
+           <View style={styles.rowContentContainer}>
+            <View style={styles.testImageContainer}>
+              <Image source={{uri: dirs}}  style={styles.testImage} />
+            </View>
+            <View style={styles.rowContentTextContainer}>
+              <Text style={styles.rowName}>{rowData.name}</Text>
+              <Text style={styles.rowDesignation}>{rowData.designation}</Text>
+            </View>
+          </View>
+        </TouchableHighlight>
+    )
+  }
 }
 const styles = StyleSheet.create({
   container: {
@@ -620,9 +620,8 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   rowContentContainer:{
-    flex: 1,
     flexDirection: 'row',
-    alignItems:'center'
+    alignItems:'center',
   },
   requestRowContentContainer:{
     flexDirection: 'row',
@@ -660,9 +659,10 @@ const styles = StyleSheet.create({
     height:70,
   },
   rowContentTextContainer:{
-    flex: 1,
     flexDirection: 'column',
-    alignItems:'flex-start',
+    alignItems: 'flex-start',
+    width:Dimensions.get('window').width,
+    marginLeft: 30,
   },
   requestContainer:{
     flexDirection: 'column',
@@ -707,7 +707,7 @@ const styles = StyleSheet.create({
     height:60,
   },
   testImageContainer:{
-    borderRadius: 50,
+    borderRadius: 30,
     marginLeft: 10,
     overflow:'hidden'
   },
